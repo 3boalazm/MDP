@@ -12,9 +12,12 @@ export function Faq() {
       <div className="mx-auto max-w-2xl">
         <h2 className="font-display text-center text-2xl sm:text-3xl font-medium tracking-tight">{t.faq.title}</h2>
         <div className="mt-8 flex flex-col gap-2">
-          {items.map((item) => (
+          {items.map((item, i) => (
             <details
-              key={item.q}
+              // Index, not item.q — item.q is translated and changes on
+              // locale toggle, which would remount every <details> and
+              // silently close whichever one the user had open.
+              key={i}
               className="hover-lift group rounded-2xl px-4 py-3.5"
               style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}
             >

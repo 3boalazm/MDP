@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { LOCALE_COOKIE } from "./localeCookie";
 
 export type Locale = "ar" | "en";
 
@@ -384,7 +385,9 @@ interface LocaleContextValue {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-const STORAGE_KEY = "stem-studio-locale";
+function persistLocale(value: Locale) {
+  document.cookie = `${LOCALE_COOKIE}=${value}; path=/; max-age=31536000; SameSite=Lax`;
+}
 
 export function LocaleProvider({
   initialLocale = "ar",
@@ -395,15 +398,9 @@ export function LocaleProvider({
 }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
-  // Reads a client-only persisted preference after the SSR-safe default has
-  // already painted, so server and first-paint client markup match — a
-  // hydration-mismatch guard, not state derived from props/state.
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stored === "ar" || stored === "en") setLocaleState(stored);
-  }, []);
-
+  // Only needed for an in-session toggle (no navigation) — the server
+  // already renders the correct lang/dir/title for the initial load itself,
+  // since initialLocale comes from the same cookie read server-side.
   useEffect(() => {
     document.documentElement.lang = locale === "ar" ? "ar" : "en";
     document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
@@ -412,13 +409,13 @@ export function LocaleProvider({
 
   const setLocale = useCallback((next: Locale) => {
     setLocaleState(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    persistLocale(next);
   }, []);
 
   const toggleLocale = useCallback(() => {
     setLocaleState((prev) => {
       const next = prev === "ar" ? "en" : "ar";
-      window.localStorage.setItem(STORAGE_KEY, next);
+      persistLocale(next);
       return next;
     });
   }, []);
