@@ -5,7 +5,8 @@ import { useMemo } from "react";
 const BAR_COUNT = 56;
 
 /** Downsamples an AudioBuffer to a fixed number of peak bars for display. */
-function computePeaks(buffer: AudioBuffer, bars: number): number[] {
+function computePeaks(buffer: AudioBuffer | undefined, bars: number): number[] {
+  if (!buffer) return new Array(bars).fill(0.06);
   const data = buffer.getChannelData(0);
   const bucketSize = Math.max(1, Math.floor(data.length / bars));
   const peaks: number[] = [];
@@ -30,7 +31,7 @@ export function Waveform({
   playedColor = "var(--accent-audio)",
   unplayedColor = "rgba(255,255,255,0.16)",
 }: {
-  buffer: AudioBuffer;
+  buffer: AudioBuffer | undefined;
   /** 0..1 playhead position */
   progress: number;
   onSeek?: (fraction: number) => void;

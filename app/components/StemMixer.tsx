@@ -14,7 +14,8 @@ function formatTime(sec: number) {
   return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
 }
 
-function downloadStem(buffer: AudioBuffer, filename: string) {
+function downloadStem(buffer: AudioBuffer | undefined, filename: string) {
+  if (!buffer) return;
   const url = URL.createObjectURL(audioBufferToWav(buffer));
   const a = document.createElement("a");
   a.href = url;

@@ -109,7 +109,15 @@ export default function Home() {
     if (!pendingFile) return;
     setFile(pendingFile);
     if (mode === "server") {
-      void serverSep.start(pendingFile, { drums: wantDrums, bass: wantBass, other: wantOther });
+      // Fast Mode's config screen hides the per-specialist checkboxes and
+      // states it always computes all 4 stems — but wantDrums/wantBass/
+      // wantOther can still hold `false` left over from a prior on-device
+      // configuration, since switching modes doesn't reset them. Passing
+      // that stale value through would make the server omit a stem, and
+      // the results screen has no "missing stem" handling for Fast Mode
+      // (unlike on-device, which always gets all 4 from the main pass
+      // regardless of these flags) — so always request all 4 here.
+      void serverSep.start(pendingFile, { drums: true, bass: true, other: true });
     } else {
       void sep.start(pendingFile, { drums: wantDrums, bass: wantBass, other: wantOther });
     }

@@ -32,7 +32,7 @@ export function StemResultCard({
   onDownload,
 }: {
   source: Source;
-  buffer: AudioBuffer;
+  buffer: AudioBuffer | undefined;
   /** 0..1 playhead position */
   progress: number;
   duration: number;
