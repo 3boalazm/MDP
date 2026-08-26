@@ -56,6 +56,12 @@ async function run(msg: Extract<WorkerInMessage, { type: "run" }>) {
       graphOptimizationLevel: optimized ? "all" : "disabled",
       enableCpuMemArena: optimized,
       enableMemPattern: optimized,
+      // Lets independent branches of the graph (e.g. the hybrid model's
+      // separate time/frequency-domain branches) execute concurrently
+      // instead of strictly one-at-a-time — same computation, same output,
+      // just less idle time. Gated behind "optimized" like the settings
+      // above since it also raises peak memory during the run.
+      executionMode: optimized ? "parallel" : "sequential",
     });
     post({ type: "engine", backend: msg.profile.provider });
 
