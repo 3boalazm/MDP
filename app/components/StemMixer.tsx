@@ -1,18 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useStemPlayer } from "@/lib/separation/useStemPlayer";
 import { audioBufferToWav } from "@/lib/audioProcessor";
 import { mixStems } from "@/lib/separation/mixStems";
-import { MAX_GAIN, type Source } from "@/lib/separation/constants";
+import { SOURCES, type Source } from "@/lib/separation/constants";
+import { StemResultCard, STEM_LABEL } from "@/app/components/StemResultCard";
 
 const DISPLAY_ORDER: Source[] = ["vocals", "drums", "bass", "other"];
-const STEM_LABEL: Record<Source, string> = {
-  vocals: "Vocals",
-  drums: "Drums",
-  bass: "Bass",
-  other: "Other",
-};
 
 function formatTime(sec: number) {
   const s = Math.max(0, Math.floor(sec));
@@ -28,6 +23,8 @@ function downloadStem(buffer: AudioBuffer, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+const fullGains = (): Record<Source, number> => Object.fromEntries(SOURCES.map((s) => [s, 1])) as Record<Source, number>;
+
 export function StemMixer({
   stems,
   duration,
@@ -39,6 +36,19 @@ export function StemMixer({
 }) {
   const player = useStemPlayer(stems, duration);
   const [selected, setSelected] = useState<Set<Source>>(new Set());
+  const [showCombine, setShowCombine] = useState(false);
+  const [lastGain, setLastGain] = useState<Record<Source, number>>(fullGains);
+  const [mutedSet, setMutedSet] = useState<Set<Source>>(new Set());
+  const [soloSource, setSoloSource] = useState<Source | null>(null);
+
+  // Reflect mute/solo intent onto the actual audio gain nodes.
+  useEffect(() => {
+    for (const s of SOURCES) {
+      const g = soloSource ? (s === soloSource ? lastGain[s] : 0) : mutedSet.has(s) ? 0 : lastGain[s];
+      player.setGain(s, g);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastGain, mutedSet, soloSource, player.setGain]);
 
   const toggleSelected = (source: Source) => {
     setSelected((prev) => {
@@ -49,61 +59,103 @@ export function StemMixer({
     });
   };
 
+  const toggleMute = useCallback((s: Source) => {
+    setMutedSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(s)) next.delete(s);
+      else next.add(s);
+      return next;
+    });
+  }, []);
+
+  const toggleSolo = useCallback((s: Source) => {
+    setSoloSource((prev) => (prev === s ? null : s));
+  }, []);
+
   const saveCombined = () => {
     const sources = DISPLAY_ORDER.filter((s) => selected.has(s));
     if (sources.length < 2) return;
-    const mixed = mixStems(stems, sources, player.gains);
+    const mixed = mixStems(stems, sources, lastGain);
     downloadStem(mixed, `${baseName}-${sources.join("+")}.wav`);
   };
 
+  const downloadAll = () => {
+    DISPLAY_ORDER.forEach((s, i) => {
+      setTimeout(() => downloadStem(stems[s], `${baseName}-${s}.wav`), i * 200);
+    });
+  };
+
+  const progress = duration > 0 ? Math.min(player.currentTime, duration) / duration : 0;
+
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3">
-        {DISPLAY_ORDER.map((source) => (
-          <div key={source} className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={selected.has(source)}
-              onChange={() => toggleSelected(source)}
-              className="shrink-0 accent-[var(--accent)]"
-              aria-label={`Select ${STEM_LABEL[source]} for combined save`}
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold" style={{ color: "var(--muted)" }}>
+          Your stems
+        </h2>
+        <button
+          onClick={downloadAll}
+          className="rounded-full px-3.5 py-1.5 text-xs font-medium"
+          style={{ background: "var(--card-raised)", color: "var(--foreground)", border: "1px solid var(--card-border)" }}
+        >
+          Download all stems
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {DISPLAY_ORDER.map((source, i) => (
+          <div key={source} style={{ animationDelay: `${i * 70}ms` }}>
+            <StemResultCard
+              source={source}
+              buffer={stems[source]}
+              progress={progress}
+              duration={duration}
+              gain={lastGain[source]}
+              muted={mutedSet.has(source)}
+              soloed={soloSource === source}
+              selected={selected.has(source)}
+              onToggleSelected={() => toggleSelected(source)}
+              onSeek={(fraction) => player.seek(fraction * duration)}
+              onGainChange={(v) => setLastGain((prev) => ({ ...prev, [source]: v }))}
+              onToggleMute={() => toggleMute(source)}
+              onToggleSolo={() => toggleSolo(source)}
+              onDownload={() => downloadStem(stems[source], `${baseName}-${source}.wav`)}
             />
-            <StemIcon source={source} />
-            <input
-              type="range"
-              min={0}
-              max={MAX_GAIN}
-              step={0.01}
-              value={player.gains[source]}
-              onChange={(e) => player.setGain(source, Number(e.target.value))}
-              className="flex-1 accent-[var(--accent)]"
-              aria-label={`${STEM_LABEL[source]} volume`}
-            />
-            <span className="text-[11px] w-9 text-right shrink-0 tabular-nums" style={{ color: "var(--muted)" }}>
-              {Math.round(player.gains[source] * 100)}%
-            </span>
-            <button
-              onClick={() => downloadStem(stems[source], `${baseName}-${source}.wav`)}
-              className="text-[11px] underline underline-offset-2 shrink-0"
-              style={{ color: "var(--muted)" }}
-            >
-              Save
-            </button>
           </div>
         ))}
       </div>
 
-      {selected.size >= 2 && (
-        <button
-          onClick={saveCombined}
-          className="text-xs font-medium rounded-full px-4 py-2"
-          style={{ background: "var(--dropzone-bg)", color: "var(--foreground)", border: "1px solid var(--card-border)" }}
-        >
-          Save combined ({DISPLAY_ORDER.filter((s) => selected.has(s)).map((s) => STEM_LABEL[s]).join(" + ")})
-        </button>
-      )}
-
       <div>
+        <button
+          onClick={() => setShowCombine((v) => !v)}
+          className="text-xs font-medium underline underline-offset-2"
+          style={{ color: "var(--muted)" }}
+        >
+          {showCombine ? "Hide" : "More"}: combine stems into one file
+        </button>
+        {showCombine && selected.size >= 2 && (
+          <div className="mt-2">
+            <button
+              onClick={saveCombined}
+              className="text-xs font-medium rounded-full px-4 py-2"
+              style={{ background: "var(--card-raised)", color: "var(--foreground)", border: "1px solid var(--card-border)" }}
+            >
+              Save combined ({DISPLAY_ORDER.filter((s) => selected.has(s)).map((s) => STEM_LABEL[s]).join(" + ")})
+            </button>
+          </div>
+        )}
+        {showCombine && selected.size < 2 && (
+          <p className="mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
+            Check &ldquo;Combine&rdquo; on two or more stems above to mix and save them as one file.
+          </p>
+        )}
+      </div>
+
+      {/* Now playing — a shared transport, since all stems play back in sync. */}
+      <div
+        className="sticky bottom-3 flex flex-col gap-2 rounded-2xl p-3.5 shadow-lg"
+        style={{ background: "var(--card-raised)", border: "1px solid var(--card-border)" }}
+      >
         <input
           type="range"
           min={0}
@@ -114,73 +166,35 @@ export function StemMixer({
           className="w-full accent-[var(--accent)]"
           aria-label="Seek"
         />
-        <div className="flex justify-between text-[11px] mt-1" style={{ color: "var(--muted)" }}>
-          <span>{formatTime(player.currentTime)}</span>
-          <span>-{formatTime(Math.max(0, duration - player.currentTime))}</span>
-        </div>
-      </div>
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-[11px] tabular-nums w-10" style={{ color: "var(--muted)" }}>
+            {formatTime(player.currentTime)}
+          </span>
 
-      <div className="flex items-center justify-center gap-6">
-        <button onClick={() => player.seek(player.currentTime - 10)} aria-label="Back 10 seconds">
-          <RewindIcon />
-        </button>
-        <button
-          onClick={() => (player.isPlaying ? player.pause() : player.play())}
-          className="h-11 w-11 rounded-full flex items-center justify-center"
-          style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
-          aria-label={player.isPlaying ? "Pause" : "Play"}
-        >
-          {player.isPlaying ? <PauseIcon /> : <PlayIcon />}
-        </button>
-        <button onClick={() => player.seek(player.currentTime + 10)} aria-label="Forward 10 seconds">
-          <ForwardIcon />
-        </button>
+          <div className="flex items-center gap-5">
+            <button onClick={() => player.seek(player.currentTime - 10)} aria-label="Back 10 seconds">
+              <RewindIcon />
+            </button>
+            <button
+              onClick={() => (player.isPlaying ? player.pause() : player.play())}
+              className="h-10 w-10 rounded-full flex items-center justify-center"
+              style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
+              aria-label={player.isPlaying ? "Pause" : "Play"}
+            >
+              {player.isPlaying ? <PauseIcon /> : <PlayIcon />}
+            </button>
+            <button onClick={() => player.seek(player.currentTime + 10)} aria-label="Forward 10 seconds">
+              <ForwardIcon />
+            </button>
+          </div>
+
+          <span className="text-[11px] tabular-nums w-10 text-right" style={{ color: "var(--muted)" }}>
+            -{formatTime(Math.max(0, duration - player.currentTime))}
+          </span>
+        </div>
       </div>
     </div>
   );
-}
-
-function StemIcon({ source }: { source: Source }) {
-  const common = {
-    width: 18,
-    height: 18,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "var(--muted)",
-    strokeWidth: 1.6,
-  };
-  switch (source) {
-    case "vocals":
-      return (
-        <svg {...common}>
-          <rect x="9" y="3" width="6" height="11" rx="3" />
-          <path d="M5 11a7 7 0 0014 0M12 18v3m-4 0h8" strokeLinecap="round" />
-        </svg>
-      );
-    case "drums":
-      return (
-        <svg {...common}>
-          <ellipse cx="12" cy="7" rx="8" ry="3.2" />
-          <path d="M4 7v8a8 3.2 0 0016 0V7" />
-          <path d="M8.5 4.5L4 2m11 2.5L19 2" strokeLinecap="round" />
-        </svg>
-      );
-    case "bass":
-      return (
-        <svg {...common}>
-          <circle cx="9" cy="16" r="4.5" />
-          <path d="M12 13l6-9m-3 1l3 2m-5 1l3 2" strokeLinecap="round" />
-        </svg>
-      );
-    case "other":
-      return (
-        <svg {...common}>
-          <path d="M9 18V5l10-2v13" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="6.5" cy="18" r="2.5" />
-          <circle cx="16.5" cy="16" r="2.5" />
-        </svg>
-      );
-  }
 }
 
 function PlayIcon() {

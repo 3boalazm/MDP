@@ -1,21 +1,39 @@
 @import "tailwindcss";
 
+/* Dark audio workspace — this is a deliberate brand decision (not a
+   light/dark toggle), so these tokens are the only theme. See the product
+   blueprint: dark canvas, one purple accent for UI/interaction, one teal
+   accent reserved for "this is playing / this works" states. */
 :root {
-  --background: #f5f5f7;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-border: #e5e5e5;
-  --muted: #6b6b70;
-  --accent: #6d28d9;
-  --accent-hover: #5b21b6;
+  --background: #090b0f;
+  --card: #12161d;
+  --card-raised: #1a2029;
+  --card-border: rgba(255, 255, 255, 0.1);
+  --foreground: #f5f7fa;
+  --muted: #a6afbc;
+
+  --accent: #6a4cff;
+  --accent-hover: #7f65ff;
+  --accent-glow: #9b7bff;
   --accent-foreground: #ffffff;
-  --success: #15803d;
-  --success-bg: #dcfce7;
-  --danger: #b91c1c;
-  --danger-bg: #fee2e2;
-  --dropzone-bg: #fafafa;
-  --dropzone-active-bg: #f2edff;
-  --track: #e5e5e5;
+
+  --accent-audio: #54d6c7;
+  --accent-audio-foreground: #06201c;
+
+  --success: #54d6c7;
+  --success-bg: rgba(84, 214, 199, 0.12);
+  --warning: #f5b971;
+  --warning-bg: rgba(245, 185, 113, 0.12);
+  --danger: #ff7d8a;
+  --danger-bg: rgba(255, 125, 138, 0.14);
+
+  --dropzone-bg: #0e1117;
+  --dropzone-active-bg: rgba(106, 76, 255, 0.1);
+  --track: rgba(255, 255, 255, 0.08);
+
+  --radius-sm: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
 }
 
 @theme inline {
@@ -30,28 +48,105 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: #161616;
-    --card-border: #2a2a2a;
-    --muted: #a1a1a6;
-    --accent: #8b5cf6;
-    --accent-hover: #a78bfa;
-    --accent-foreground: #0a0a0a;
-    --success: #4ade80;
-    --success-bg: #14291c;
-    --danger: #f87171;
-    --danger-bg: #2c1414;
-    --dropzone-bg: #121212;
-    --dropzone-active-bg: #1e1730;
-    --track: #2a2a2a;
-  }
+* {
+  border-color: var(--card-border);
+}
+
+html {
+  color-scheme: dark;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Motion */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ring-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: var(--ring-opacity, 0.5);
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: calc(var(--ring-opacity, 0.5) * 1.6);
+  }
+}
+
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes micro-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 600ms ease-out both;
+}
+
+.animate-ring-breathe {
+  animation: ring-breathe 11s ease-in-out infinite;
+}
+
+.animate-stagger-in {
+  animation: stagger-in 350ms ease-out both;
+}
+
+.animate-shake {
+  animation: micro-shake 220ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-ring-breathe,
+  .animate-stagger-in,
+  .animate-shake {
+    animation: none !important;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }

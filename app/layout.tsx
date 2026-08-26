@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Header } from "@/app/components/Header";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Remove Vocals",
   description: "Strip vocals from a song entirely in your browser — no upload, no server.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Remove Vocals",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#090b0f",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,7 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }
