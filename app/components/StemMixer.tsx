@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useStemPlayer } from "@/lib/separation/useStemPlayer";
 import { audioBufferToWav } from "@/lib/audioProcessor";
 import { mixStems } from "@/lib/separation/mixStems";
+import { useLocale } from "@/lib/i18n";
 import { SOURCES, type Source } from "@/lib/separation/constants";
-import { StemResultCard, STEM_LABEL } from "@/app/components/StemResultCard";
+import { StemResultCard } from "@/app/components/StemResultCard";
 
 const DISPLAY_ORDER: Source[] = ["vocals", "drums", "bass", "other"];
 
@@ -35,9 +36,9 @@ export function StemMixer({
   duration: number;
   baseName: string;
 }) {
+  const { t } = useLocale();
   const player = useStemPlayer(stems, duration);
   const [selected, setSelected] = useState<Set<Source>>(new Set());
-  const [showCombine, setShowCombine] = useState(false);
   const [lastGain, setLastGain] = useState<Record<Source, number>>(fullGains);
   const [mutedSet, setMutedSet] = useState<Set<Source>>(new Set());
   const [soloSource, setSoloSource] = useState<Source | null>(null);
@@ -92,14 +93,14 @@ export function StemMixer({
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold" style={{ color: "var(--muted)" }}>
-          Your stems
+          {t.stems.yourStems}
         </h2>
         <button
           onClick={downloadAll}
-          className="rounded-full px-3.5 py-1.5 text-xs font-medium"
+          className="shine hover-lift press-scale rounded-full px-3.5 py-1.5 text-xs font-medium"
           style={{ background: "var(--card-raised)", color: "var(--foreground)", border: "1px solid var(--card-border)" }}
         >
-          Download all stems
+          {t.stems.downloadAll}
         </button>
       </div>
 
@@ -126,36 +127,38 @@ export function StemMixer({
         ))}
       </div>
 
-      <div>
-        <button
-          onClick={() => setShowCombine((v) => !v)}
-          className="text-xs font-medium underline underline-offset-2"
-          style={{ color: "var(--muted)" }}
+      {selected.size > 0 && (
+        <div
+          className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
+          style={{ background: "var(--card-raised)", border: "1px solid var(--accent-audio)" }}
         >
-          {showCombine ? "Hide" : "More"}: combine stems into one file
-        </button>
-        {showCombine && selected.size >= 2 && (
-          <div className="mt-2">
-            <button
-              onClick={saveCombined}
-              className="text-xs font-medium rounded-full px-4 py-2"
-              style={{ background: "var(--card-raised)", color: "var(--foreground)", border: "1px solid var(--card-border)" }}
-            >
-              Save combined ({DISPLAY_ORDER.filter((s) => selected.has(s)).map((s) => STEM_LABEL[s]).join(" + ")})
-            </button>
-          </div>
-        )}
-        {showCombine && selected.size < 2 && (
-          <p className="mt-2 text-[11px]" style={{ color: "var(--muted)" }}>
-            Check &ldquo;Combine&rdquo; on two or more stems above to mix and save them as one file.
-          </p>
-        )}
-      </div>
+          {selected.size >= 2 ? (
+            <>
+              <span className="text-xs" style={{ color: "var(--muted)" }}>
+                {DISPLAY_ORDER.filter((s) => selected.has(s))
+                  .map((s) => t.stems.label[s])
+                  .join(" + ")}
+              </span>
+              <button
+                onClick={saveCombined}
+                className="shine hover-lift press-scale rounded-full px-4 py-2 text-xs font-medium"
+                style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
+              >
+                {t.stems.saveCombined}
+              </button>
+            </>
+          ) : (
+            <span className="text-xs" style={{ color: "var(--muted)" }}>
+              {t.stems.combineHint}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Now playing — a shared transport, since all stems play back in sync. */}
       <div
-        className="sticky bottom-3 flex flex-col gap-2 rounded-2xl p-3.5 shadow-lg"
-        style={{ background: "var(--card-raised)", border: "1px solid var(--card-border)" }}
+        dir="ltr"
+        className="glass hover-lift sticky bottom-3 flex flex-col gap-2 rounded-2xl p-3.5 shadow-lg"
       >
         <input
           type="range"
@@ -178,7 +181,7 @@ export function StemMixer({
             </button>
             <button
               onClick={() => (player.isPlaying ? player.pause() : player.play())}
-              className="h-10 w-10 rounded-full flex items-center justify-center"
+              className="press-scale glow-accent h-10 w-10 rounded-full flex items-center justify-center"
               style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
               aria-label={player.isPlaying ? "Pause" : "Play"}
             >

@@ -42,7 +42,10 @@ export function Waveform({
   const playedBars = Math.round(progress * BAR_COUNT);
 
   return (
+    // Time always reads left-to-right, like the seek bar next to it —
+    // independent of the page's text direction.
     <div
+      dir="ltr"
       className="flex items-center gap-[2px] h-10 w-full cursor-pointer"
       role={onSeek ? "slider" : undefined}
       aria-valuenow={onSeek ? Math.round(progress * 100) : undefined}
@@ -63,6 +66,7 @@ export function Waveform({
             height: `${Math.round(p * 100)}%`,
             minHeight: 2,
             background: i < playedBars ? playedColor : unplayedColor,
+            boxShadow: i < playedBars ? "0 0 6px rgba(84,214,199,0.55)" : "none",
           }}
         />
       ))}

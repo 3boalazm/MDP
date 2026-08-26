@@ -1,41 +1,46 @@
 "use client";
 
-import { InstallButton } from "@/app/components/InstallButton";
+import { useLocale } from "@/lib/i18n";
 
 export function Header() {
+  const { t, locale, toggleLocale } = useLocale();
+
   return (
-    <header
-      className="sticky top-0 z-40 backdrop-blur-md"
-      style={{ background: "rgba(9,11,15,0.75)", borderBottom: "1px solid var(--card-border)" }}
-    >
+    <header className="glass sticky top-0 z-40">
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4 px-4 sm:px-6 py-3.5">
         <a href="#top" className="flex items-center gap-2 shrink-0">
           <WaveformMark />
-          <span className="text-sm font-semibold tracking-wide">STEM STUDIO</span>
+          <span className="font-display text-base font-medium tracking-wide">{t.header.brand}</span>
         </a>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm" style={{ color: "var(--muted)" }}>
           <a href="#how-it-works" className="hover:text-[var(--foreground)] transition-colors">
-            How it works
+            {t.header.nav.howItWorks}
           </a>
           <a href="#faq" className="hover:text-[var(--foreground)] transition-colors">
-            FAQ
+            {t.header.nav.faq}
           </a>
           <a href="#privacy" className="hover:text-[var(--foreground)] transition-colors">
-            Privacy
+            {t.header.nav.privacy}
           </a>
         </nav>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="hidden sm:block">
-            <InstallButton />
-          </div>
+          <button
+            onClick={toggleLocale}
+            className="hover-lift press-scale rounded-full px-3 py-1.5 text-xs font-medium"
+            style={{ border: "1px solid var(--card-border)", color: "var(--foreground)" }}
+            aria-label={t.common.switchTo}
+            title={t.common.switchTo}
+          >
+            {locale === "ar" ? "EN" : "AR"}
+          </button>
           <a
             href="#workspace"
-            className="rounded-full px-4 py-2 text-xs sm:text-sm font-medium transition-colors"
+            className="shine hover-lift press-scale rounded-full px-4 py-2 text-xs sm:text-sm font-medium transition-colors"
             style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
           >
-            Start separating
+            {t.header.cta}
           </a>
         </div>
       </div>

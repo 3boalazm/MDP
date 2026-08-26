@@ -1,41 +1,21 @@
+"use client";
+
+import { useLocale } from "@/lib/i18n";
 import { SERVER_MODE_AVAILABLE } from "@/lib/separation/serverConstants";
 
-const BASE_FAQ = [
-  {
-    q: "Does my audio ever leave my device?",
-    a: "No, not in the default on-device mode. The AI models are downloaded once and cached in your browser, then every separation runs locally — your audio file is never sent anywhere.",
-  },
-  {
-    q: "What file formats and limits are supported?",
-    a: "MP3, WAV, and M4A, up to 100MB and 12 minutes per file. Stereo files give the model real left/right information to work with, so they separate more accurately than mono.",
-  },
-  {
-    q: "How long does separation take?",
-    a: "It depends on your device and which specialist models you enable. The first run also downloads the models (up to ~650MB total), which are cached afterward so later runs skip straight to processing.",
-  },
-  {
-    q: "What happens if the AI engine can't run on my device?",
-    a: "You'll be offered a basic fallback that uses phase cancellation instead of AI. It's noticeably lower quality, but still fully local — nothing is uploaded.",
-  },
-];
-
-const SERVER_FAQ = {
-  q: "What does Fast Mode change about privacy?",
-  a: "Fast Mode trades privacy for speed: your audio is uploaded to a GPU server for processing instead of running in your browser. Use on-device mode if keeping your audio local matters to you.",
-};
-
 export function Faq() {
-  const items = SERVER_MODE_AVAILABLE ? [...BASE_FAQ, SERVER_FAQ] : BASE_FAQ;
+  const { t } = useLocale();
+  const items = SERVER_MODE_AVAILABLE ? [...t.faq.items, t.faq.serverItem] : t.faq.items;
 
   return (
-    <section id="faq" className="px-4 py-16 sm:py-20">
+    <section id="faq" className="px-4 py-16 sm:py-20 scroll-mt-16">
       <div className="mx-auto max-w-2xl">
-        <h2 className="text-center text-2xl sm:text-3xl font-semibold tracking-tight">FAQ</h2>
+        <h2 className="font-display text-center text-2xl sm:text-3xl font-medium tracking-tight">{t.faq.title}</h2>
         <div className="mt-8 flex flex-col gap-2">
           {items.map((item) => (
             <details
               key={item.q}
-              className="group rounded-2xl px-4 py-3.5"
+              className="hover-lift group rounded-2xl px-4 py-3.5"
               style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}
             >
               <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-medium list-none">

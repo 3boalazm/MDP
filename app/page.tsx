@@ -6,6 +6,7 @@ import { useServerSeparation } from "@/lib/separation/useServerSeparation";
 import { useFallback } from "@/lib/fallback/useFallback";
 import { MAX_INPUT_MB, MAX_DURATION_SECONDS } from "@/lib/separation/constants";
 import { SERVER_MODE_AVAILABLE } from "@/lib/separation/serverConstants";
+import { useLocale } from "@/lib/i18n";
 import type { Pass, SpecialistSource } from "@/lib/separation/useSeparation";
 import type { ServerStage } from "@/lib/separation/useServerSeparation";
 import { StemMixer } from "@/app/components/StemMixer";
@@ -15,13 +16,6 @@ import { Faq } from "@/app/components/Faq";
 import { Footer } from "@/app/components/Footer";
 
 type Mode = "ai" | "fallback" | "server";
-
-const PASS_LABEL: Record<Pass, string> = {
-  main: "main model",
-  drums: "drums specialist",
-  bass: "bass specialist",
-  other: "other specialist",
-};
 
 function formatMB(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(0);
@@ -39,25 +33,6 @@ function formatDuration(ms: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function stageLabel(stage: string, pass: Pass) {
-  switch (stage) {
-    case "validating":
-      return "Validating file…";
-    case "decoding":
-      return "Decoding audio…";
-    case "loading-model":
-      return pass === "main" ? "Loading AI model…" : `Loading ${PASS_LABEL[pass]} model…`;
-    case "loading-session":
-      return pass === "main" ? "Starting AI engine…" : `Starting ${PASS_LABEL[pass]} engine…`;
-    case "processing":
-      return pass === "main" ? "Separating vocals, drums, bass & other…" : `Improving ${pass}…`;
-    case "finalizing":
-      return "Reconstructing output…";
-    default:
-      return "Working…";
-  }
-}
-
 const ACTIVE_STAGES = new Set([
   "validating",
   "decoding",
@@ -69,22 +44,8 @@ const ACTIVE_STAGES = new Set([
 
 const SERVER_ACTIVE_STAGES = new Set(["validating", "uploading", "processing", "finalizing"]);
 
-function serverStageLabel(stage: ServerStage) {
-  switch (stage) {
-    case "validating":
-      return "Validating file…";
-    case "uploading":
-      return "Uploading…";
-    case "processing":
-      return "Separating on the server…";
-    case "finalizing":
-      return "Decoding result…";
-    default:
-      return "Working…";
-  }
-}
-
 export default function Home() {
+  const { t, locale } = useLocale();
   const [file, setFile] = useState<File | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [wantDrums, setWantDrums] = useState(true);
@@ -186,6 +147,7 @@ export default function Home() {
         (s) => sep.state.result!.quality[s] === "standard"
       )
     : [];
+  const listSeparator = locale === "ar" ? "، " : ", ";
 
   return (
     <>
@@ -193,17 +155,12 @@ export default function Home() {
       <Steps />
 
       <section id="workspace" className="px-4 py-16 sm:py-20 scroll-mt-16">
-        <div
-          className="mx-auto w-full max-w-md rounded-2xl border p-8 shadow-sm"
-          style={{ background: "var(--card)", borderColor: "var(--card-border)" }}
-        >
+        <div className="glass mx-auto w-full max-w-md rounded-2xl p-8">
           <p className="text-xs font-semibold tracking-[0.15em] uppercase text-center" style={{ color: "var(--accent-audio)" }}>
-            Workspace
+            {t.workspace.eyebrow}
           </p>
           <p className="mt-2 text-sm text-center" style={{ color: "var(--muted)" }}>
-            {mode === "server"
-              ? "Fast Mode uploads your audio to our GPU server for processing."
-              : "Your audio is processed locally in your browser. No audio is uploaded to a server."}
+            {mode === "server" ? t.workspace.serverNote : t.workspace.privacyNote}
           </p>
 
           <div className="mt-6">
@@ -228,13 +185,17 @@ export default function Home() {
                   <path d="M12 16V4m0 0L7 9m5-5l5 5" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <p className="text-sm font-medium">{isDragging ? "Drop to separate" : "Drop your song here"}</p>
-                <p className="text-xs" style={{ color: "var(--muted)" }}>or</p>
+                <p className="text-sm font-medium">
+                  {isDragging ? t.workspace.dropzone.dragLabel : t.workspace.dropzone.idleLabel}
+                </p>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  {t.workspace.dropzone.or}
+                </p>
                 <span
-                  className="inline-block rounded-full px-4 py-2 text-sm font-medium"
+                  className="shine hover-lift press-scale inline-block rounded-full px-4 py-2 text-sm font-medium"
                   style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
                 >
-                  Choose file
+                  {t.workspace.dropzone.chooseFile}
                 </span>
                 <input
                   ref={inputRef}
@@ -247,10 +208,10 @@ export default function Home() {
                   }}
                 />
                 <p className="text-[11px] mt-1" style={{ color: "var(--muted)" }}>
-                  MP3, WAV, or M4A · up to {MAX_INPUT_MB}MB · {MAX_DURATION_SECONDS / 60} min
+                  {t.workspace.dropzone.limits(MAX_INPUT_MB, MAX_DURATION_SECONDS / 60)}
                 </p>
                 <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                  Up to 4 specialist AI models (~650MB total), cached after first download.
+                  {t.workspace.dropzone.modelsNote}
                 </p>
               </div>
             )}
@@ -265,7 +226,7 @@ export default function Home() {
                     <p className="text-sm font-medium truncate" title={pendingFile.name}>
                       {pendingFile.name}
                     </p>
-                    <p className="text-[11px]" style={{ color: "var(--muted)" }}>
+                    <p className="ltr-metric text-[11px]" style={{ color: "var(--muted)" }}>
                       {formatBytes(pendingFile.size)}
                     </p>
                   </div>
@@ -274,35 +235,38 @@ export default function Home() {
                     className="shrink-0 text-xs font-medium underline underline-offset-2"
                     style={{ color: "var(--muted)" }}
                   >
-                    Change file
+                    {t.workspace.fileSummary.changeFile}
                   </button>
                 </div>
 
                 {SERVER_MODE_AVAILABLE && (
                   <div className="flex gap-1 rounded-full p-1" style={{ background: "var(--dropzone-bg)" }}>
-                    <ModeToggle label="On-device" active={mode === "ai"} onClick={() => setMode("ai")} />
-                    <ModeToggle label="Fast Mode" active={mode === "server"} onClick={() => setMode("server")} />
+                    <ModeToggle label={t.workspace.modeToggle.onDevice} active={mode === "ai"} onClick={() => setMode("ai")} />
+                    <ModeToggle label={t.workspace.modeToggle.fastMode} active={mode === "server"} onClick={() => setMode("server")} />
                   </div>
                 )}
 
                 {mode === "ai" && (
                   <>
                     <p className="text-xs" style={{ color: "var(--muted)" }}>
-                      Turn off any specialist you don&apos;t need — each one skipped means one less model to download
-                      and one less pass to process, so it finishes faster.
+                      {t.workspace.specialists.intro}
                     </p>
 
                     <div className="flex flex-col gap-2">
-                      <SpecialistToggle label="Enhance Vocals" checked disabled hint="always on — main model" />
-                      <SpecialistToggle label="Enhance Drums" checked={wantDrums} onChange={setWantDrums} />
-                      <SpecialistToggle label="Enhance Bass" checked={wantBass} onChange={setWantBass} />
-                      <SpecialistToggle label="Enhance Other" checked={wantOther} onChange={setWantOther} />
+                      <SpecialistToggle
+                        label={t.workspace.specialists.vocals}
+                        checked
+                        disabled
+                        hint={t.workspace.specialists.vocalsHint}
+                      />
+                      <SpecialistToggle label={t.workspace.specialists.drums} checked={wantDrums} onChange={setWantDrums} />
+                      <SpecialistToggle label={t.workspace.specialists.bass} checked={wantBass} onChange={setWantBass} />
+                      <SpecialistToggle label={t.workspace.specialists.other} checked={wantOther} onChange={setWantOther} />
                     </div>
 
                     {!anySpecialistSelected && (
                       <p className="text-[11px] rounded-lg px-3 py-2" style={{ background: "var(--dropzone-bg)", color: "var(--muted)" }}>
-                        Only the main model will run — drums/bass/other will use its standard (not specialist) quality.
-                        Fastest option.
+                        {t.workspace.specialists.onlyMainNote}
                       </p>
                     )}
                   </>
@@ -310,17 +274,16 @@ export default function Home() {
 
                 {mode === "server" && (
                   <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--dropzone-bg)", color: "var(--muted)" }}>
-                    Fast Mode always computes all 4 stems at full specialist quality on our GPU server — much
-                    quicker than on-device, at the cost of uploading your audio.
+                    {t.workspace.fastModeNote}
                   </p>
                 )}
 
                 <button
                   onClick={startSeparation}
-                  className="rounded-full px-4 py-2.5 text-sm font-medium"
+                  className="shine hover-lift press-scale rounded-full px-4 py-2.5 text-sm font-medium"
                   style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
                 >
-                  Start separation
+                  {t.workspace.startButton}
                 </button>
               </div>
             )}
@@ -332,10 +295,19 @@ export default function Home() {
                   style={{ borderColor: "var(--track)", borderTopColor: "var(--accent)" }}
                 />
                 <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                  Pass {activePassOrder.indexOf(sep.state.pass) + 1}/{activePassOrder.length}:{" "}
-                  {PASS_LABEL[sep.state.pass]}
+                  {t.workspace.progress.passCounter(
+                    activePassOrder.indexOf(sep.state.pass) + 1,
+                    activePassOrder.length,
+                    t.workspace.progress.passLabel[sep.state.pass]
+                  )}
                 </p>
-                <p className="text-sm font-medium">{stageLabel(sep.state.stage, sep.state.pass)}</p>
+                <p className="text-sm font-medium">
+                  {t.workspace.progress.stage(
+                    sep.state.stage,
+                    t.workspace.progress.passLabel[sep.state.pass],
+                    sep.state.pass === "main"
+                  )}
+                </p>
 
                 {sep.state.stage === "loading-model" && sep.state.modelProgress && (
                   <div className="w-full">
@@ -346,12 +318,12 @@ export default function Home() {
                           : 0
                       }
                     />
-                    <p className="text-xs text-center mt-1" style={{ color: "var(--muted)" }}>
+                    <p className="ltr-metric text-xs text-center mt-1" style={{ color: "var(--muted)" }}>
                       {formatMB(sep.state.modelProgress.loaded)} /{" "}
                       {sep.state.modelProgress.total > 0 ? formatMB(sep.state.modelProgress.total) : "?"} MB
                     </p>
                     <p className="text-[11px] text-center mt-1" style={{ color: "var(--muted)" }}>
-                      Preparing the separation engine — this first download is cached, so future runs skip it.
+                      {t.workspace.progress.modelDownloadNote}
                     </p>
                   </div>
                 )}
@@ -360,16 +332,18 @@ export default function Home() {
                   <div className="w-full">
                     <ProgressBar fraction={sep.state.chunkProgress.current / sep.state.chunkProgress.total} />
                     <p className="text-xs text-center mt-1" style={{ color: "var(--muted)" }}>
-                      Chunk {sep.state.chunkProgress.current}/{sep.state.chunkProgress.total} · Elapsed{" "}
-                      {formatDuration(sep.state.elapsedMs)}
-                      {sep.state.etaMs !== null ? ` · ETA ${formatDuration(sep.state.etaMs)}` : ""}
+                      <span className="ltr-metric inline-block">
+                        {t.workspace.progress.chunkProgress(sep.state.chunkProgress.current, sep.state.chunkProgress.total)}
+                      </span>{" "}
+                      · {t.workspace.progress.elapsed(formatDuration(sep.state.elapsedMs))}
+                      {sep.state.etaMs !== null ? ` · ${t.workspace.progress.eta(formatDuration(sep.state.etaMs))}` : ""}
                     </p>
                   </div>
                 )}
 
                 {sep.state.engine && (
                   <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                    GPU acceleration: {sep.state.engine === "webgpu" ? "WebGPU" : "WASM (CPU)"}
+                    {t.workspace.progress.gpu(sep.state.engine === "webgpu" ? "WebGPU" : "WASM (CPU)")}
                   </p>
                 )}
 
@@ -378,7 +352,7 @@ export default function Home() {
                   className="text-xs font-medium underline underline-offset-2"
                   style={{ color: "var(--muted)" }}
                 >
-                  Cancel
+                  {t.workspace.progress.cancel}
                 </button>
               </div>
             )}
@@ -389,7 +363,7 @@ export default function Home() {
                   className="h-8 w-8 rounded-full border-2 animate-spin"
                   style={{ borderColor: "var(--track)", borderTopColor: "var(--accent)" }}
                 />
-                <p className="text-sm font-medium">{serverStageLabel(serverSep.state.stage)}</p>
+                <p className="text-sm font-medium">{t.workspace.serverProgress.stage(serverSep.state.stage as ServerStage)}</p>
 
                 {serverSep.state.stage === "uploading" && serverSep.state.uploadProgress && (
                   <div className="w-full">
@@ -400,14 +374,14 @@ export default function Home() {
                           : 0
                       }
                     />
-                    <p className="text-xs text-center mt-1" style={{ color: "var(--muted)" }}>
+                    <p className="ltr-metric text-xs text-center mt-1" style={{ color: "var(--muted)" }}>
                       {formatMB(serverSep.state.uploadProgress.loaded)} / {formatMB(serverSep.state.uploadProgress.total)} MB
                     </p>
                   </div>
                 )}
 
                 <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                  Elapsed {formatDuration(serverSep.state.elapsedMs)}
+                  {t.workspace.progress.elapsed(formatDuration(serverSep.state.elapsedMs))}
                 </p>
 
                 <button
@@ -415,7 +389,7 @@ export default function Home() {
                   className="text-xs font-medium underline underline-offset-2"
                   style={{ color: "var(--muted)" }}
                 >
-                  Cancel
+                  {t.workspace.progress.cancel}
                 </button>
               </div>
             )}
@@ -423,14 +397,14 @@ export default function Home() {
             {mode === "server" && serverSep.state.stage === "cancelled" && (
               <div className="flex flex-col items-center gap-4 py-8 text-center">
                 <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Cancelled.
+                  {t.workspace.cancelled}
                 </p>
                 <button
                   onClick={resetAll}
                   className="text-sm font-medium underline underline-offset-2"
                   style={{ color: "var(--accent)" }}
                 >
-                  New separation
+                  {t.workspace.newSeparation}
                 </button>
               </div>
             )}
@@ -446,10 +420,10 @@ export default function Home() {
                 {serverSep.state.errorKind !== "validation" && (
                   <button
                     onClick={switchToOnDevice}
-                    className="rounded-full px-4 py-2 text-sm font-medium"
+                    className="shine hover-lift press-scale rounded-full px-4 py-2 text-sm font-medium"
                     style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
                   >
-                    Use on-device instead
+                    {t.workspace.useOnDeviceInstead}
                   </button>
                 )}
                 <button
@@ -457,7 +431,7 @@ export default function Home() {
                   className="text-sm font-medium underline underline-offset-2"
                   style={{ color: "var(--muted)" }}
                 >
-                  New separation
+                  {t.workspace.newSeparation}
                 </button>
               </div>
             )}
@@ -471,11 +445,11 @@ export default function Home() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  Fast Mode complete — vocals, drums, bass &amp; other separated
+                  {t.workspace.done.serverBanner}
                 </div>
 
                 <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                  Engine: server-side GPU (HT-Demucs FT) · Elapsed {formatDuration(serverSep.state.elapsedMs)}
+                  {t.workspace.done.serverEngineLine(formatDuration(serverSep.state.elapsedMs))}
                 </p>
 
                 <StemMixer stems={serverSep.state.result.stems} duration={serverSep.state.result.duration} baseName={baseName} />
@@ -485,7 +459,7 @@ export default function Home() {
                   className="text-sm font-medium underline underline-offset-2 self-center"
                   style={{ color: "var(--muted)" }}
                 >
-                  New separation
+                  {t.workspace.newSeparation}
                 </button>
               </div>
             )}
@@ -493,14 +467,14 @@ export default function Home() {
             {mode === "ai" && sep.state.stage === "cancelled" && (
               <div className="flex flex-col items-center gap-4 py-8 text-center">
                 <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Cancelled.
+                  {t.workspace.cancelled}
                 </p>
                 <button
                   onClick={resetAll}
                   className="text-sm font-medium underline underline-offset-2"
                   style={{ color: "var(--accent)" }}
                 >
-                  New separation
+                  {t.workspace.newSeparation}
                 </button>
               </div>
             )}
@@ -516,10 +490,10 @@ export default function Home() {
                 {sep.state.errorKind === "engine" && (
                   <button
                     onClick={useFallbackNow}
-                    className="rounded-full px-4 py-2 text-sm font-medium"
+                    className="shine hover-lift press-scale rounded-full px-4 py-2 text-sm font-medium"
                     style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
                   >
-                    Use basic fallback instead (lower quality, not AI)
+                    {t.workspace.useFallbackInstead}
                   </button>
                 )}
                 <button
@@ -527,7 +501,7 @@ export default function Home() {
                   className="text-sm font-medium underline underline-offset-2"
                   style={{ color: "var(--muted)" }}
                 >
-                  New separation
+                  {t.workspace.newSeparation}
                 </button>
               </div>
             )}
@@ -541,25 +515,29 @@ export default function Home() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  AI model loaded — vocals, drums, bass &amp; other separated
+                  {t.workspace.done.aiBanner}
                 </div>
 
                 <p className="text-[11px]" style={{ color: "var(--muted)" }}>
-                  Engine: AI source separation ({sep.state.engine === "webgpu" ? "WebGPU" : "WASM"}) · Model:{" "}
-                  {sep.modelName} · Elapsed {formatDuration(sep.state.elapsedMs)}
+                  {t.workspace.done.engineLine(
+                    sep.state.engine === "webgpu" ? "WebGPU" : "WASM",
+                    sep.modelName,
+                    formatDuration(sep.state.elapsedMs)
+                  )}
                 </p>
 
                 {sep.state.isMono && (
                   <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
-                    This file is mono. The model still ran, but without real stereo information its accuracy is reduced.
+                    {t.workspace.done.monoWarning}
                   </p>
                 )}
 
                 {failedSpecialists.length > 0 && (
                   <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
-                    {failedSpecialists.join(", ")} specialist pass{failedSpecialists.length > 1 ? "es" : ""}{" "}
-                    couldn&apos;t run on this device — that stem came from the main model instead (standard, not
-                    enhanced, quality).
+                    {t.workspace.done.failedSpecialistsWarning(
+                      failedSpecialists.map((s) => t.stems.label[s]).join(listSeparator),
+                      failedSpecialists.length > 1
+                    )}
                   </p>
                 )}
 
@@ -570,7 +548,7 @@ export default function Home() {
                   className="text-sm font-medium underline underline-offset-2 self-center"
                   style={{ color: "var(--muted)" }}
                 >
-                  New separation
+                  {t.workspace.newSeparation}
                 </button>
               </div>
             )}
@@ -652,13 +630,14 @@ function SpecialistToggle({
 function ProgressBar({ fraction }: { fraction: number }) {
   const pct = Math.max(0, Math.min(1, fraction)) * 100;
   return (
-    <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--track)" }}>
+    <div dir="ltr" className="w-full h-2 rounded-full overflow-hidden" style={{ background: "var(--track)" }}>
       <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: "var(--accent)" }} />
     </div>
   );
 }
 
 function StemBlock({ label, url, filename }: { label: string; url: string; filename: string }) {
+  const { t } = useLocale();
   return (
     <div className="flex flex-col gap-2">
       <span className="text-xs font-medium" style={{ color: "var(--muted)" }}>
@@ -668,10 +647,10 @@ function StemBlock({ label, url, filename }: { label: string; url: string; filen
       <a
         href={url}
         download={filename}
-        className="text-center rounded-full px-4 py-2 text-sm font-medium"
+        className="shine hover-lift press-scale text-center rounded-full px-4 py-2 text-sm font-medium"
         style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
       >
-        Download {label}
+        {t.workspace.fallback.downloadLabel(label)}
       </a>
     </div>
   );
@@ -696,10 +675,11 @@ function FallbackPanel({
   onStrengthChange: (v: number) => void;
   onReset: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg px-4 py-3 text-xs" style={{ background: "var(--warning-bg)", color: "var(--warning)" }}>
-        ⚠ Fallback mode: phase cancellation, not AI. Quality is noticeably lower than the AI engine.
+        {t.workspace.fallback.banner}
       </div>
 
       {status === "processing" && (
@@ -709,7 +689,7 @@ function FallbackPanel({
             style={{ borderColor: "var(--track)", borderTopColor: "var(--accent)" }}
           />
           <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Processing…
+            {t.workspace.fallback.processing}
           </p>
         </div>
       )}
@@ -724,16 +704,17 @@ function FallbackPanel({
         <div className="flex flex-col gap-4">
           {isMono && (
             <p className="text-xs rounded-lg px-3 py-2" style={{ background: "var(--dropzone-bg)", color: "var(--muted)" }}>
-              This file is mono, so there&apos;s no stereo separation to exploit — the output is unchanged from the original.
+              {t.workspace.fallback.monoNote}
             </p>
           )}
           {!isMono && (
             <div>
               <div className="flex items-center justify-between text-xs mb-1" style={{ color: "var(--muted)" }}>
-                <label htmlFor="fallback-strength">Removal strength</label>
-                <span>{Math.round(strength * 100)}%</span>
+                <label htmlFor="fallback-strength">{t.workspace.fallback.removalStrength}</label>
+                <span className="ltr-metric">{Math.round(strength * 100)}%</span>
               </div>
               <input
+                dir="ltr"
                 id="fallback-strength"
                 type="range"
                 min={0}
@@ -745,12 +726,16 @@ function FallbackPanel({
               />
             </div>
           )}
-          <StemBlock label="Instrumental" url={resultUrl} filename={`${baseName}-instrumental-fallback.wav`} />
+          <StemBlock
+            label={t.workspace.fallback.instrumentalLabel}
+            url={resultUrl}
+            filename={`${baseName}-instrumental-fallback.wav`}
+          />
         </div>
       )}
 
       <button onClick={onReset} className="text-sm font-medium underline underline-offset-2" style={{ color: "var(--muted)" }}>
-        New separation
+        {t.workspace.newSeparation}
       </button>
     </div>
   );

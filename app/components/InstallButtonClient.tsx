@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/lib/i18n";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -22,6 +23,7 @@ function isIOSSafari() {
 // Rendered only on the client (see InstallButton.tsx) so these lazy
 // initializers, which read browser-only APIs, can never mismatch SSR output.
 export function InstallButtonClient() {
+  const { t } = useLocale();
   const [installed, setInstalled] = useState(isStandalone);
   const [iosEligible] = useState(isIOSSafari);
   const [showIOS, setShowIOS] = useState(false);
@@ -68,14 +70,15 @@ export function InstallButtonClient() {
       <button
         type="button"
         onClick={handleClick}
-        className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer"
+        aria-label={t.install.button}
+        className="hover-lift press-scale inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer"
         style={{ borderColor: "var(--card-border)", color: "var(--accent)" }}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 16V4m0 0L7 9m5-5l5 5" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        Install App
+        {t.install.button}
       </button>
 
       {showIOS && (
@@ -86,25 +89,20 @@ export function InstallButtonClient() {
           onClick={() => setShowIOS(false)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border p-6 shadow-lg"
-            style={{ background: "var(--card)", borderColor: "var(--card-border)" }}
+            className="glass w-full max-w-sm rounded-2xl p-6 shadow-lg animate-fade-in-up"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-sm font-medium">Install on iPhone / iPad</p>
+            <p className="text-sm font-medium">{t.install.iosTitle}</p>
             <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-              Tap the Share icon in Safari&apos;s toolbar, then choose{" "}
-              <span className="font-medium" style={{ color: "var(--foreground)" }}>
-                Add to Home Screen
-              </span>
-              .
+              {t.install.iosBody}
             </p>
             <button
               type="button"
               onClick={() => setShowIOS(false)}
-              className="mt-4 w-full rounded-full py-2 text-sm font-medium"
+              className="hover-lift press-scale mt-4 w-full rounded-full py-2 text-sm font-medium"
               style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
             >
-              Got it
+              {t.install.gotIt}
             </button>
           </div>
         </div>

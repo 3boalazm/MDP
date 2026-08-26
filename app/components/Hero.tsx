@@ -1,10 +1,16 @@
 "use client";
 
+import { useLocale } from "@/lib/i18n";
+import { InstallButton } from "@/app/components/InstallButton";
+
 const RING_COUNT = 6;
 
 export function Hero({ onChooseFile }: { onChooseFile: () => void }) {
+  const { t } = useLocale();
+
   return (
     <section className="relative overflow-hidden px-4 py-20 sm:py-28 text-center">
+      <BlurOrbs />
       <BreathingRings />
 
       <div className="relative mx-auto max-w-2xl animate-fade-in-up">
@@ -12,42 +18,47 @@ export function Hero({ onChooseFile }: { onChooseFile: () => void }) {
           className="text-xs font-semibold tracking-[0.2em] uppercase"
           style={{ color: "var(--accent-audio)" }}
         >
-          Local audio separation
+          {t.hero.eyebrow}
         </p>
-        <h1 className="mt-4 text-[38px] sm:text-6xl font-semibold tracking-tight leading-[1.05]">
-          Turn one track into four clean stems.
+        <h1 className="font-display mt-4 text-[34px] sm:text-6xl font-medium tracking-tight leading-[1.15] sm:leading-[1.08]">
+          {t.hero.title}
         </h1>
         <p className="mt-5 text-base sm:text-lg leading-relaxed" style={{ color: "var(--muted)" }}>
-          Separate vocals, drums, bass, and other instruments directly in your browser.
-          Nothing you upload here — because nothing gets uploaded.
+          {t.hero.subtitle}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={onChooseFile}
-            className="rounded-full px-6 py-3 text-sm font-semibold transition-colors"
+            className="shine hover-lift press-scale glow-accent rounded-full px-6 py-3 text-sm font-semibold transition-colors"
             style={{ background: "var(--foreground)", color: "var(--background)" }}
           >
-            Choose a file
+            {t.hero.primaryCta}
           </button>
           <a
             href="#how-it-works"
-            className="rounded-full px-6 py-3 text-sm font-medium transition-colors"
+            className="hover-lift press-scale rounded-full px-6 py-3 text-sm font-medium transition-colors"
             style={{ border: "1px solid var(--card-border)", color: "var(--foreground)" }}
           >
-            See how it works
+            {t.hero.secondaryCta}
           </a>
+        </div>
+
+        <div className="mt-4 flex justify-center">
+          <InstallButton />
         </div>
 
         <div
           className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs"
           style={{ color: "var(--muted)" }}
         >
-          <TrustItem>No upload</TrustItem>
+          <TrustItem>{t.hero.trust.noUpload}</TrustItem>
           <Dot />
-          <TrustItem>Runs on your device</TrustItem>
+          <TrustItem>{t.hero.trust.onDevice}</TrustItem>
           <Dot />
-          <TrustItem>MP3 · WAV · M4A</TrustItem>
+          <TrustItem>
+            <span className="ltr-metric">{t.hero.trust.formats}</span>
+          </TrustItem>
         </div>
       </div>
     </section>
@@ -67,6 +78,36 @@ function TrustItem({ children }: { children: React.ReactNode }) {
 
 function Dot() {
   return <span className="hidden sm:inline opacity-40">·</span>;
+}
+
+function BlurOrbs() {
+  return (
+    <>
+      <div
+        className="blur-orb animate-blob-drift"
+        aria-hidden="true"
+        style={{
+          width: 420,
+          height: 420,
+          left: "8%",
+          top: "-10%",
+          background: "radial-gradient(circle, rgba(106,76,255,0.28), transparent 70%)",
+        }}
+      />
+      <div
+        className="blur-orb animate-blob-drift"
+        aria-hidden="true"
+        style={{
+          width: 380,
+          height: 380,
+          right: "6%",
+          bottom: "-15%",
+          background: "radial-gradient(circle, rgba(84,214,199,0.18), transparent 70%)",
+          animationDelay: "3s",
+        }}
+      />
+    </>
+  );
 }
 
 function BreathingRings() {

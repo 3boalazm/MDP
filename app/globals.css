@@ -34,6 +34,18 @@
   --radius-sm: 12px;
   --radius-lg: 20px;
   --radius-pill: 999px;
+
+  /* English/LTR default: Latin body face first, Arabic face as fallback
+     for any stray Arabic content. */
+  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, Arial, sans-serif;
+  --font-display: var(--font-thmanyah-serif), var(--font-ibm-plex-sans), serif;
+}
+
+:root[dir="rtl"] {
+  /* Arabic mode: Arabic body face first, Latin as fallback for embedded
+     Latin snippets (WAV, MP3, model names, …). */
+  --font-sans: var(--font-ibm-plex-sans-arabic), var(--font-ibm-plex-sans), ui-sans-serif, sans-serif;
+  --font-display: var(--font-thmanyah-serif), var(--font-ibm-plex-sans-arabic), serif;
 }
 
 @theme inline {
@@ -44,8 +56,6 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 * {
@@ -59,12 +69,24 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
 }
 
 ::selection {
   background: var(--accent);
-  color: var(--accent-foreground);
+  color: var(--accent-audio-foreground);
+}
+
+/* Timelines, seek bars, and byte/percentage counters stay left-to-right
+   regardless of page direction — mirroring "elapsed → remaining" reads as
+   backwards even in an RTL layout. */
+.ltr-metric {
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 /* Motion */
@@ -123,6 +145,25 @@ body {
   }
 }
 
+@keyframes blob-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(3%, -4%) scale(1.08);
+  }
+}
+
+@keyframes shine-sweep {
+  from {
+    transform: translateX(-130%) skewX(-12deg);
+  }
+  to {
+    transform: translateX(230%) skewX(-12deg);
+  }
+}
+
 .animate-fade-in-up {
   animation: fade-in-up 600ms ease-out both;
 }
@@ -139,12 +180,101 @@ body {
   animation: micro-shake 220ms ease-out;
 }
 
+.animate-blob-drift {
+  animation: blob-drift 16s ease-in-out infinite;
+}
+
+/* Glassmorphism surface: translucent, blurred, with a soft inner top
+   highlight so it reads as a pane of glass rather than a flat tint. */
+.glass {
+  background: rgba(18, 22, 29, 0.6);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--card-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Soft ambient glow, for CTAs and "this is active" surfaces. */
+.glow-accent {
+  box-shadow:
+    0 0 0 1px rgba(106, 76, 255, 0.35),
+    0 8px 30px rgba(106, 76, 255, 0.28);
+}
+
+.glow-audio {
+  box-shadow:
+    0 0 0 1px rgba(84, 214, 199, 0.4),
+    0 8px 24px rgba(84, 214, 199, 0.22);
+}
+
+/* Large, heavily-blurred color fields used as ambient background
+   atmosphere behind hero/section content — decorative only. */
+.blur-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+/* Diagonal light sweep across a surface on hover — a single pass, not a
+   loop, so it reads as a response to attention rather than a distraction. */
+.shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.22) 45%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.22) 55%,
+    transparent
+  );
+  transform: translateX(-130%) skewX(-12deg);
+  pointer-events: none;
+}
+
+.shine:hover::after {
+  animation: shine-sweep 850ms ease;
+}
+
+.hover-lift {
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    border-color 200ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.press-scale {
+  transition: transform 120ms ease;
+}
+
+.press-scale:active {
+  transform: scale(0.97);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .animate-ring-breathe,
   .animate-stagger-in,
-  .animate-shake {
+  .animate-shake,
+  .animate-blob-drift,
+  .shine:hover::after {
     animation: none !important;
+  }
+  .hover-lift:hover {
+    transform: none;
   }
   * {
     transition-duration: 0.01ms !important;

@@ -1,25 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/app/components/Header";
+import { LocaleProvider } from "@/lib/i18n";
+import { thmanyahSerifDisplay, ibmPlexSans, ibmPlexSansArabic } from "@/lib/fonts";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Remove Vocals",
-  description: "Strip vocals from a song entirely in your browser — no upload, no server.",
+  title: "استوديو التراكس",
+  description: "افصل الغناء والطبول والباص عن أي أغنية محليًا جوه متصفحك — بدون رفع، بدون سيرفر.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Remove Vocals",
+    title: "استوديو التراكس",
   },
 };
 
@@ -30,12 +21,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="ar"
+      dir="rtl"
+      className={`${thmanyahSerifDisplay.variable} ${ibmPlexSans.variable} ${ibmPlexSansArabic.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
-        {children}
+        <LocaleProvider initialLocale="ar">
+          <Header />
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );

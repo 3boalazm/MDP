@@ -1,14 +1,8 @@
 "use client";
 
 import { Waveform } from "@/app/components/Waveform";
+import { useLocale } from "@/lib/i18n";
 import { MAX_GAIN, type Source } from "@/lib/separation/constants";
-
-export const STEM_LABEL: Record<Source, string> = {
-  vocals: "Vocals",
-  drums: "Drums",
-  bass: "Bass",
-  other: "Other",
-};
 
 function formatTime(sec: number) {
   const s = Math.max(0, Math.floor(sec));
@@ -47,31 +41,35 @@ export function StemResultCard({
   onToggleSolo: () => void;
   onDownload: () => void;
 }) {
+  const { t } = useLocale();
+  const label = t.stems.label[source];
+
   return (
     <div
-      className="animate-stagger-in flex flex-col gap-3 rounded-2xl p-4"
+      className="hover-lift animate-stagger-in flex flex-col gap-3 rounded-2xl p-4"
       style={{
         background: "var(--card-raised)",
         border: `1px solid ${soloed ? "var(--accent-audio)" : "var(--card-border)"}`,
+        boxShadow: soloed ? "0 0 0 1px rgba(84,214,199,0.4), 0 8px 24px rgba(84,214,199,0.18)" : "none",
       }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <StemIcon source={source} />
-          <span className="text-sm font-semibold">{STEM_LABEL[source]}</span>
+          <span className="text-sm font-semibold">{label}</span>
         </div>
         <span
           className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide"
           style={{ color: "var(--accent-audio)" }}
         >
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent-audio)" }} />
-          Ready
+          {t.stems.ready}
         </span>
       </div>
 
       <Waveform buffer={buffer} progress={muted ? 0 : progress} onSeek={onSeek} />
 
-      <div className="flex items-center justify-between text-[11px] tabular-nums" style={{ color: "var(--muted)" }}>
+      <div className="ltr-metric flex items-center justify-between text-[11px] tabular-nums" style={{ color: "var(--muted)" }}>
         <span>{formatTime(progress * duration)}</span>
         <span>{formatTime(duration)}</span>
       </div>
@@ -80,28 +78,29 @@ export function StemResultCard({
         <button
           onClick={onToggleMute}
           aria-pressed={muted}
-          className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors"
+          className="hover-lift press-scale rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors"
           style={{
             background: muted ? "var(--danger-bg)" : "transparent",
             color: muted ? "var(--danger)" : "var(--muted)",
             border: "1px solid var(--card-border)",
           }}
         >
-          Mute
+          {t.stems.mute}
         </button>
         <button
           onClick={onToggleSolo}
           aria-pressed={soloed}
-          className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors"
+          className="hover-lift press-scale rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors"
           style={{
             background: soloed ? "var(--accent-audio)" : "transparent",
             color: soloed ? "var(--accent-audio-foreground)" : "var(--muted)",
             border: soloed ? "1px solid transparent" : "1px solid var(--card-border)",
           }}
         >
-          Solo
+          {t.stems.solo}
         </button>
         <input
+          dir="ltr"
           type="range"
           min={0}
           max={MAX_GAIN}
@@ -109,9 +108,9 @@ export function StemResultCard({
           value={gain}
           onChange={(e) => onGainChange(Number(e.target.value))}
           className="flex-1 accent-[var(--accent)]"
-          aria-label={`${STEM_LABEL[source]} volume`}
+          aria-label={`${label} volume`}
         />
-        <span className="text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--muted)" }}>
+        <span className="ltr-metric text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--muted)" }}>
           {Math.round(gain * 100)}%
         </span>
       </div>
@@ -123,16 +122,16 @@ export function StemResultCard({
             checked={selected}
             onChange={onToggleSelected}
             className="accent-[var(--accent)]"
-            aria-label={`Select ${STEM_LABEL[source]} for combined save`}
+            aria-label={`${t.stems.combine} ${label}`}
           />
-          Combine
+          {t.stems.combine}
         </label>
         <button
           onClick={onDownload}
-          className="ml-auto rounded-full px-3 py-1.5 text-[11px] font-medium"
+          className="shine hover-lift press-scale ms-auto rounded-full px-3 py-1.5 text-[11px] font-medium"
           style={{ background: "var(--accent)", color: "var(--accent-foreground)" }}
         >
-          Download WAV
+          {t.stems.downloadWav}
         </button>
       </div>
     </div>
