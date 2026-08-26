@@ -62,6 +62,22 @@ unzip -l out.zip   # expect vocals.mp3, drums.mp3, bass.mp3, other.mp3
 modal deploy server/app.py
 ```
 
+## Deployed endpoint
+
+```
+https://boalazm--demucs-fast-mode-demucsserver-web.modal.run/separate
+```
+
+Live as of 2026-08-26 under the `boalazm` Modal workspace. Verified with a
+real request: HTTP 200, valid `vocals.mp3`/`drums.mp3`/`bass.mp3`/`other.mp3`
+in the response zip. ~20s on a cold-ish container, ~12s once warm. Set
+`NEXT_PUBLIC_MODAL_SEPARATE_URL` to this URL and `MODAL_SHARED_SECRET` to the
+matching `demucs-shared-secret` value (see "One-time setup" above) to use it.
+
+Redeploying (`modal deploy server/app.py` again after changing `app.py`)
+reuses this same URL — it doesn't change on redeploy, only on renaming the
+app or the Modal class.
+
 ## Cost/latency knob to know about
 
 `min_containers=1` in `app.py` keeps one GPU container warm at all times to

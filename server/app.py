@@ -20,9 +20,10 @@ import modal
 
 # `add_local_python_source("demucs")` below resolves the package via Python's
 # own import system on the machine running `modal serve`/`modal deploy` — put
-# the repo root (this file's parent's parent) on sys.path so that resolves
-# correctly regardless of the invoking working directory.
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# the actual repo root (containing demucs-main/demucs/) on sys.path so that
+# resolves correctly regardless of the invoking working directory. This file
+# lives at <repo>/web/server/app.py, three levels below that root.
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
