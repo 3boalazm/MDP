@@ -90,6 +90,65 @@ GPU tier defaults to `gpu="L4"` (cost-effective for this workload). Check
 Modal's current pricing page before relying on any specific $/hr figure — it
 changes over time.
 
+## TRIA drum specialist (Modal)
+
+`tria_app.py` is a separate, additive Modal App (`tria-drum-specialist`) for
+experimental TRIA-based drum generation — deliberately its own App, not a
+class/route on `DemucsServer` above, so it stays fully isolated from the
+actual Fast Mode feature. Reuses `hf-space/tria_chunked.py` and
+`hf-space/tria_vendor/` (the validated chunked-inference module and real
+vendored TRIA weights, see `hf-space/TRIA_PRODUCTION_REPORT.md`) unmodified,
+bundled into the image via `add_local_dir`.
+
+**License gate:** refuses to run unless a `tria-license-ack` Modal secret
+exists (`ACKNOWLEDGED=true`) — a deliberate, separate acknowledgment that
+TRIA's pretrained weights are CC BY-NC-SA 4.0 (non-commercial), not something
+this code decides on its own. See `hf-space/README.md` "TRIA licensing".
+
+```bash
+modal secret create tria-license-ack ACKNOWLEDGED=true   # only if you accept the NC license terms for this deployment
+modal deploy server/tria_app.py
+```
+
+Reuses the same `demucs-shared-secret` value as the Demucs backend for auth
+(`X-Fast-Mode-Token`) — no separate secret needed for that part.
+
+### Deployed endpoint
+
+```
+https://m1aboalazm--tria-drum-specialist-triaserver-web.modal.run/generate_drums
+```
+
+Deployed 2026-08-27 under the `m1aboalazm` Modal workspace. `min_containers=0`
+— zero GPU billing until a request actually comes in. Build/deploy succeeded
+cleanly (all dependencies resolved, `add_local_dir` placed the bundle
+correctly), and the underlying generation logic was already proven correct
+via extensive local-GPU testing (see `hf-space/TRIA_PRODUCTION_REPORT.md`) —
+but **the live endpoint itself has not yet been invoked with a real request**,
+by deliberate choice (avoids spending GPU credit until wanted). Run one
+request manually to confirm the FastAPI wrapper works end-to-end before
+relying on this in anything user-facing:
+
+```bash
+TOKEN=$(python3 -c "
+import hmac, hashlib, time
+secret = '<demucs-shared-secret API_KEY value>'
+expires_at = int(time.time() * 1000) + 300_000
+sig = hmac.new(secret.encode(), str(expires_at).encode(), hashlib.sha256).hexdigest()
+print(f'{expires_at}.{sig}')
+")
+curl -X POST "https://m1aboalazm--tria-drum-specialist-triaserver-web.modal.run/generate_drums" \
+  -H "X-Fast-Mode-Token: $TOKEN" \
+  -F "rhythm_file=@test.mp3" \
+  -o generated_drums.wav
+```
+
+No frontend wiring exists for this endpoint yet (no `web/app/api/` route
+calls it) — deliberately deferred, same reasoning as
+`hf-space/TRIA_PRODUCTION_REPORT.md` §9a: which GPU host to standardize on,
+and whether/how to surface an NC-licensed generation feature in the actual
+product UI, are product decisions, not routine wiring.
+
 ## Known v1 limitations
 
 - Rate limiting is a simple per-container, in-memory sliding window keyed by
