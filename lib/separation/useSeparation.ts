@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { decodeForSeparation, DurationError } from "./decode";
 import { loadModelBytes, ModelLoadError } from "./modelSource";
+import { getCachedProfile, prioritizeCachedProfile, setCachedProfile } from "./profileCache";
 import {
   ATTEMPT_PROFILES_NO_GPU,
   ATTEMPT_PROFILES_WITH_GPU,
@@ -91,6 +92,16 @@ type PassOutcome =
   | { outcome: "done"; stems: StemBuffers }
   | { outcome: "cancelled" }
   | { outcome: "error"; message: string };
+
+// A worker that silently stops responding (observed: a WASM Aborted() inside
+// onnxruntime-web that doesn't always propagate as a catchable error — see
+// https://github.com/3boalazm/MDP/issues/1) would otherwise hang runAttempt's
+// promise forever, freezing the UI with no way out. This is a stall
+// detector, not a total-duration timeout: it resets on every message the
+// worker sends (stage change, chunk progress, …), so a run that's genuinely
+// still working — just slow on constrained hardware — is never killed for
+// taking a while, only for going completely silent.
+const STALL_TIMEOUT_MS = 90_000;
 
 export function useSeparation() {
   const [state, setState] = useState<SeparationState>(initialState);
@@ -203,7 +214,28 @@ export function useSeparation() {
           });
           workerRef.current = worker;
 
+          let settled = false;
+          let stallTimer: ReturnType<typeof setTimeout>;
+          const settle = (outcome: PassOutcome) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(stallTimer);
+            resolve(outcome);
+          };
+          const armStallTimer = () => {
+            clearTimeout(stallTimer);
+            stallTimer = setTimeout(() => {
+              terminateWorker();
+              settle({
+                outcome: "error",
+                message: "The separation engine stopped responding. Your device or browser may be low on memory.",
+              });
+            }, STALL_TIMEOUT_MS);
+          };
+          armStallTimer();
+
           worker.onmessage = (event: MessageEvent<WorkerOutMessage>) => {
+            armStallTimer(); // any message at all means the worker is still alive
             const msg = event.data;
             switch (msg.type) {
               case "engine":
@@ -227,22 +259,22 @@ export function useSeparation() {
               }
               case "done":
                 terminateWorker();
-                resolve({ outcome: "done", stems: msg.stems });
+                settle({ outcome: "done", stems: msg.stems });
                 break;
               case "cancelled":
                 terminateWorker();
-                resolve({ outcome: "cancelled" });
+                settle({ outcome: "cancelled" });
                 break;
               case "error":
                 terminateWorker();
-                resolve({ outcome: "error", message: msg.message });
+                settle({ outcome: "error", message: msg.message });
                 break;
             }
           };
 
           worker.onerror = (event) => {
             terminateWorker();
-            resolve({ outcome: "error", message: event.message || "The separation worker crashed unexpectedly." });
+            settle({ outcome: "error", message: event.message || "The separation worker crashed unexpectedly." });
           };
 
           // mixL/mixR are NOT transferred — reused for the drums pass and to
@@ -252,7 +284,12 @@ export function useSeparation() {
 
       const hasWebGPU = typeof navigator !== "undefined" && "gpu" in navigator;
 
-      const runModelPass = async (modelUrl: string, pass: Pass, profiles: SessionProfile[]): Promise<PassOutcome> => {
+      const runModelPass = async (
+        modelUrl: string,
+        pass: Pass,
+        profiles: SessionProfile[],
+        onProfileDone?: (profile: SessionProfile) => void
+      ): Promise<PassOutcome> => {
         setState((s) => ({ ...s, pass }));
         let lastMessage = "The AI model couldn't run on this device.";
         for (const profile of profiles) {
@@ -278,16 +315,26 @@ export function useSeparation() {
           if (cancelledRef.current) return { outcome: "cancelled" };
 
           const result = await runAttempt(profile, bytes);
-          if (result.outcome !== "error") return result;
+          if (result.outcome !== "error") {
+            if (result.outcome === "done") onProfileDone?.(profile);
+            return result;
+          }
           lastMessage = result.message;
         }
         return { outcome: "error", message: lastMessage };
       };
 
+      // Skip straight to whichever profile actually worked on this device
+      // last time (see profileCache.ts) instead of re-paying the cost of a
+      // profile known to fail here — every other candidate stays available
+      // as a fallback in its original order.
+      const cachedProfile = getCachedProfile();
+
       const mainResult = await runModelPass(
         MODEL_URL,
         "main",
-        hasWebGPU ? ATTEMPT_PROFILES_WITH_GPU : ATTEMPT_PROFILES_NO_GPU
+        prioritizeCachedProfile(hasWebGPU ? ATTEMPT_PROFILES_WITH_GPU : ATTEMPT_PROFILES_NO_GPU, cachedProfile),
+        setCachedProfile
       );
       if (mainResult.outcome === "cancelled") {
         clearTimer();
@@ -340,7 +387,10 @@ export function useSeparation() {
         const result = await runModelPass(
           url,
           pass,
-          hasWebGPU ? ATTEMPT_PROFILES_WITH_GPU_SUBSEQUENT : ATTEMPT_PROFILES_NO_GPU
+          prioritizeCachedProfile(
+            hasWebGPU ? ATTEMPT_PROFILES_WITH_GPU_SUBSEQUENT : ATTEMPT_PROFILES_NO_GPU,
+            cachedProfile
+          )
         );
         if (result.outcome === "cancelled") {
           clearTimer();

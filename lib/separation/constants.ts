@@ -57,15 +57,26 @@ export type EngineBackend = "webgpu" | "wasm";
 // "optimized" on real GPU hardware since compute buffers live in VRAM, not
 // the constrained WASM32 heap — untested on real hardware, so it's tried
 // first and falls back to "unoptimized" webgpu, then wasm, on failure.
+//
+// numThreads (wasm only): unset uses onnxruntime-web's normal multi-threaded
+// wasm build (ort-wasm-simd-threaded.jsep.wasm, needs SharedArrayBuffer via
+// cross-origin isolation). Forcing 1 makes it load the single-threaded wasm
+// build instead — no SharedArrayBuffer/Atomics involved at all. Kept as a
+// last-resort fallback profile: a single fixed multi-threaded wasm attempt
+// with no other option was observed to abort with no recovery path (see
+// https://github.com/3boalazm/MDP/issues/1) — every attempt list below ends
+// with one of these so that path always has somewhere left to fall back to.
 export interface SessionProfile {
   provider: EngineBackend;
   optimized: boolean;
+  numThreads?: number;
 }
 
 export const ATTEMPT_PROFILES_WITH_GPU: SessionProfile[] = [
   { provider: "webgpu", optimized: true },
   { provider: "webgpu", optimized: false },
   { provider: "wasm", optimized: false },
+  { provider: "wasm", optimized: false, numThreads: 1 },
 ];
 // For every pass after the first, the previous pass's just-terminated
 // webgpu context may not have fully released its GPU memory yet — the
@@ -76,8 +87,12 @@ export const ATTEMPT_PROFILES_WITH_GPU: SessionProfile[] = [
 export const ATTEMPT_PROFILES_WITH_GPU_SUBSEQUENT: SessionProfile[] = [
   { provider: "webgpu", optimized: false },
   { provider: "wasm", optimized: false },
+  { provider: "wasm", optimized: false, numThreads: 1 },
 ];
-export const ATTEMPT_PROFILES_NO_GPU: SessionProfile[] = [{ provider: "wasm", optimized: false }];
+export const ATTEMPT_PROFILES_NO_GPU: SessionProfile[] = [
+  { provider: "wasm", optimized: false },
+  { provider: "wasm", optimized: false, numThreads: 1 },
+];
 
 export type WorkerInMessage =
   | {

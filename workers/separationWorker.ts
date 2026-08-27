@@ -16,7 +16,8 @@ import {
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
 ort.env.wasm.wasmPaths = "/ort/";
-ort.env.wasm.numThreads = Math.min(
+
+const DEFAULT_NUM_THREADS = Math.min(
   (typeof navigator !== "undefined" && navigator.hardwareConcurrency) || 2,
   4
 );
@@ -42,6 +43,15 @@ async function run(msg: Extract<WorkerInMessage, { type: "run" }>) {
   cancelled = false;
   let session: ort.InferenceSession | null = null;
   try {
+    // Fresh worker per attempt (see constants.ts), so it's safe to set this
+    // right before the one session this worker will ever create. Profiles
+    // that force numThreads: 1 load onnxruntime-web's single-threaded wasm
+    // build instead of ort-wasm-simd-threaded.jsep.wasm — no
+    // SharedArrayBuffer/Atomics involved — as a fallback for when the
+    // threaded build aborts with no way to recover (see
+    // https://github.com/3boalazm/MDP/issues/1).
+    ort.env.wasm.numThreads = msg.profile.numThreads ?? DEFAULT_NUM_THREADS;
+
     post({ type: "stage", stage: "loading-session" });
     // On wasm, this graph's session creation reliably hit std::bad_alloc /
     // an Emscripten abort with ORT's default arena allocator and graph
