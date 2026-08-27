@@ -104,7 +104,12 @@ class DemucsServer:
     def load(self):
         from demucs.api import Separator
 
-        self.separator = Separator(model=MODEL_NAME, device="cuda", shifts=1, overlap=0.25, split=True)
+        # overlap 0.25 -> 0.10: local clean benchmark (tools/separation_benchmark/,
+        # 5 repeats/config, htdemucs_ft, shifts=1 held fixed) measured ~28% lower
+        # min wall-clock at 0.10 with delta_db drift no larger than this exact
+        # config's own repeat-to-repeat variance from shifts=1's random time
+        # offset. shifts left untouched — rollback: overlap=0.25.
+        self.separator = Separator(model=MODEL_NAME, device="cuda", shifts=1, overlap=0.10, split=True)
         self._rate_limit_log: dict[str, deque] = defaultdict(deque)
 
     def _allow_request(self, client_ip: str) -> bool:
