@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Remove Vocals — AI Stem Separator",
-    short_name: "Remove Vocals",
+    name: "SakanWave — AI Stem Separator",
+    short_name: "SakanWave",
     description: "Strip vocals, drums, bass & other stems from any song — entirely in your browser.",
     start_url: "/",
     display: "standalone",

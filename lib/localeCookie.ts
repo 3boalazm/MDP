@@ -3,4 +3,4 @@
 // actual string value — a named export from a "use client" file becomes an
 // opaque client-reference stub when imported into server code, not the
 // real value, which is why this constant can't live in lib/i18n.tsx itself.
-export const LOCALE_COOKIE = "stem-studio-locale";
+export const LOCALE_COOKIE = "sakanwave-locale";

@@ -1,15 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useLocale } from "@/lib/i18n";
 import { InstallButton } from "@/app/components/InstallButton";
+import { STEM_COLOR } from "@/lib/stemColors";
+import { SOURCES } from "@/lib/separation/constants";
 
 const RING_COUNT = 6;
+const WAVE_BAR_COUNT = 32;
+const WAVE_COLORS = SOURCES.map((s) => STEM_COLOR[s]);
 
-export function Hero({ onChooseFile }: { onChooseFile: () => void }) {
+export function Hero() {
   const { t } = useLocale();
 
   return (
     <section className="relative overflow-hidden px-4 py-20 sm:py-28 text-center">
+      <WaveBars />
       <BlurOrbs />
       <BreathingRings />
 
@@ -28,13 +34,13 @@ export function Hero({ onChooseFile }: { onChooseFile: () => void }) {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button
-            onClick={onChooseFile}
+          <Link
+            href="/workspace"
             className="shine hover-lift press-scale glow-accent rounded-full px-6 py-3 text-sm font-semibold transition-colors"
             style={{ background: "var(--foreground)", color: "var(--background)" }}
           >
             {t.hero.primaryCta}
-          </button>
+          </Link>
           <a
             href="#how-it-works"
             className="hover-lift press-scale rounded-full px-6 py-3 text-sm font-medium transition-colors"
@@ -78,6 +84,36 @@ function TrustItem({ children }: { children: React.ReactNode }) {
 
 function Dot() {
   return <span className="hidden sm:inline opacity-40">·</span>;
+}
+
+// Deterministic (not Math.random()) so server and client render identical
+// heights — avoids a hydration mismatch from picking a new random pattern
+// on each render.
+function barHeight(i: number) {
+  return 30 + 22 * Math.sin(i * 0.7) + 14 * Math.sin(i * 1.9 + 1);
+}
+
+function WaveBars() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-x-0 bottom-0 flex h-40 items-end justify-center gap-1 opacity-[0.14]"
+      aria-hidden="true"
+    >
+      {Array.from({ length: WAVE_BAR_COUNT }).map((_, i) => (
+        <div
+          key={i}
+          className="wave-bar w-1.5 rounded-full"
+          style={
+            {
+              height: `${Math.max(14, barHeight(i))}%`,
+              background: WAVE_COLORS[i % WAVE_COLORS.length],
+              "--i": i,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </div>
+  );
 }
 
 function BlurOrbs() {

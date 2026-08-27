@@ -35,6 +35,21 @@
   --radius-lg: 20px;
   --radius-pill: 999px;
 
+  /* One color per stem — "vocals/drums/bass/other" each get their own
+     identity instead of sharing the single teal "active" accent. Used on
+     stem icons, result cards, and the live per-pass processing indicator
+     (which pass is running right now). All four are light/saturated
+     enough that they need a dark foreground when used as a fill. */
+  --stem-vocals: #ff6b9d;
+  --stem-drums: #00d4ff;
+  --stem-bass: #b8ff00;
+  --stem-other: #ffaa00;
+  --stem-foreground: #05050a;
+  --glow-vocals: rgba(255, 107, 157, 0.45);
+  --glow-drums: rgba(0, 212, 255, 0.45);
+  --glow-bass: rgba(184, 255, 0, 0.4);
+  --glow-other: rgba(255, 170, 0, 0.4);
+
   /* English/LTR default: Latin body face first, Arabic face as fallback
      for any stray Arabic content. */
   --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, Arial, sans-serif;
@@ -245,6 +260,28 @@ body {
   animation: shine-sweep 850ms ease;
 }
 
+.brand-glow-hover {
+  transition: filter 250ms ease;
+}
+
+.brand-glow-hover:hover {
+  filter: drop-shadow(0 0 10px var(--accent-glow));
+}
+
+/* Showcase cards for the "4 stems" section — each starts slightly tilted
+   (via --tilt, set inline per card) and straightens + lifts on hover. */
+.stem-tilt-card {
+  transform: rotate(var(--tilt, 0deg));
+  transition:
+    transform 350ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 350ms ease,
+    border-color 350ms ease;
+}
+
+.stem-tilt-card:hover {
+  transform: rotate(0deg) translateY(-10px);
+}
+
 .hover-lift {
   transition:
     transform 200ms ease,
@@ -264,16 +301,140 @@ body {
   transform: scale(0.97);
 }
 
+/* Animated bar-graph background (hero atmosphere) — each bar is a plain div
+   with --i set inline for a staggered delay, no JS beyond rendering N of
+   them. */
+@keyframes wave-dance {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.wave-bar {
+  transform-origin: bottom;
+  animation: wave-dance 1.3s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* Rotating conic-gradient ring used as a drop-zone border — visible only
+   while a file is dragged over it, cycling through all four stem colors so
+   the drop target itself hints "this becomes 4 things." */
+@keyframes border-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.magnetic-border {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    var(--stem-vocals),
+    var(--stem-drums),
+    var(--stem-bass),
+    var(--stem-other),
+    var(--stem-vocals)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+
+.magnetic-border.active {
+  opacity: 1;
+  animation: border-spin 3s linear infinite;
+}
+
+/* One-shot "the track splits into 4 stems" burst — plays once when
+   separation starts, contained within its parent (not viewport-fixed), one
+   bloom per stem drifting toward a corner. */
+@keyframes stem-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1);
+    opacity: 0;
+  }
+}
+
+.stem-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 55%;
+  aspect-ratio: 1;
+  max-width: 260px;
+  border-radius: 999px;
+  filter: blur(40px);
+  pointer-events: none;
+  animation: stem-burst 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Restrained neon glow — a fixed (non-pulsing) text-shadow by default, with
+   an optional slow alternate for spots where a bit of pulse is welcome
+   (brand wordmark on hover) rather than continuous motion on primary
+   reading content like the hero heading. */
+.neon-text {
+  text-shadow:
+    0 0 8px currentColor,
+    0 0 24px currentColor;
+}
+
+.neon-text-pulse {
+  animation: neon-pulse 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes neon-pulse {
+  from {
+    text-shadow:
+      0 0 6px currentColor,
+      0 0 16px currentColor;
+  }
+  to {
+    text-shadow:
+      0 0 10px currentColor,
+      0 0 30px currentColor;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .animate-ring-breathe,
   .animate-stagger-in,
   .animate-shake,
   .animate-blob-drift,
+  .wave-bar,
+  .magnetic-border.active,
+  .stem-burst,
+  .neon-text-pulse,
   .shine:hover::after {
     animation: none !important;
   }
   .hover-lift:hover {
+    transform: none;
+  }
+  .stem-tilt-card {
+    transform: none;
+  }
+  .stem-tilt-card:hover {
     transform: none;
   }
   * {

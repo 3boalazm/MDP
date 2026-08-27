@@ -11,7 +11,7 @@ const en = {
     switchTo: "العربية",
   },
   header: {
-    brand: "Stem Studio",
+    brand: "SakanWave",
     nav: { howItWorks: "How it works", faq: "FAQ", privacy: "Privacy" },
     cta: "Start separating",
   },
@@ -45,6 +45,10 @@ const en = {
         body: "Play each stem, mute or solo, and export the WAV files you need.",
       },
     ],
+  },
+  stemsShowcase: {
+    title: "Four stems, four colors",
+    subtitle: "Each instrument gets its own specialist model — and its own color, so you always know what you're looking at.",
   },
   workspace: {
     eyebrow: "Workspace",
@@ -109,7 +113,10 @@ const en = {
             return "Validating file…";
           case "uploading":
             return "Uploading…";
+          case "queued":
+            return "Queued for a GPU…";
           case "processing":
+          case "gpu-processing":
             return "Separating on the server…";
           case "finalizing":
             return "Decoding result…";
@@ -122,6 +129,9 @@ const en = {
     newSeparation: "New separation",
     useOnDeviceInstead: "Use on-device instead",
     useFallbackInstead: "Use basic fallback instead (lower quality, not AI)",
+    quotaExceeded:
+      "Fast Mode has hit its free daily GPU limit — it resets in a few hours. Try again later, or use on-device instead.",
+    engineBadge: { hfServer: "AI Server Processing", onDevice: "Local Browser Processing" },
     done: {
       aiBanner: "AI model loaded — vocals, drums, bass & other separated",
       serverBanner: "Fast Mode complete — vocals, drums, bass & other separated",
@@ -196,7 +206,7 @@ const ar: Dict = {
     switchTo: "English",
   },
   header: {
-    brand: "استوديو التراكس",
+    brand: "SakanWave",
     nav: { howItWorks: "طريقة الاستخدام", faq: "الأسئلة الشائعة", privacy: "الخصوصية" },
     cta: "ابدأ الفصل",
   },
@@ -230,6 +240,10 @@ const ar: Dict = {
         body: "شغّل كل مسار، اعمل Mute أو Solo، وصدّر ملفات WAV اللي محتاجها.",
       },
     ],
+  },
+  stemsShowcase: {
+    title: "أربع مسارات، أربع ألوان",
+    subtitle: "كل آلة ليها نموذج ذكاء اصطناعي متخصص بيها — وليها لونها كمان، عشان تعرف وأنت شايف بس إيه اللي قدامك.",
   },
   workspace: {
     eyebrow: "مساحة العمل",
@@ -294,7 +308,10 @@ const ar: Dict = {
             return "بيتأكد من الملف…";
           case "uploading":
             return "بيرفع الملف…";
+          case "queued":
+            return "في الانتظار على GPU…";
           case "processing":
+          case "gpu-processing":
             return "بيفصل الصوت على السيرفر…";
           case "finalizing":
             return "بيفك ترميز الناتج…";
@@ -307,6 +324,9 @@ const ar: Dict = {
     newSeparation: "فصل جديد",
     useOnDeviceInstead: "استخدم المعالجة على الجهاز بدل كده",
     useFallbackInstead: "استخدم الوضع البديل (جودة أقل، مش ذكاء اصطناعي)",
+    quotaExceeded:
+      "وضع السرعة وصل لحد استخدام الـ GPU المجاني اليومي — هيرجع يشتغل بعد كذا ساعة. جرب تاني بعدين، أو استخدم المعالجة على الجهاز.",
+    engineBadge: { hfServer: "معالجة على سيرفر ذكاء اصطناعي", onDevice: "معالجة محلية في المتصفح" },
     done: {
       aiBanner: "النموذج اشتغل بنجاح — الغناء والطبول والباص وباقي الآلات اتفصلوا",
       serverBanner: "وضع السرعة خلّص — الغناء والطبول والباص وباقي الآلات اتفصلوا",
@@ -404,7 +424,7 @@ export function LocaleProvider({
   useEffect(() => {
     document.documentElement.lang = locale === "ar" ? "ar" : "en";
     document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
-    document.title = locale === "ar" ? "استوديو التراكس" : "Stem Studio";
+    document.title = "SakanWave";
   }, [locale]);
 
   const setLocale = useCallback((next: Locale) => {

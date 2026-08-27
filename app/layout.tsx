@@ -11,11 +11,11 @@ import "./globals.css";
 // not just after client JS hydrates and corrects it.
 const META: Record<Locale, { title: string; description: string }> = {
   ar: {
-    title: "استوديو التراكس",
+    title: "SakanWave",
     description: "افصل الغناء والطبول والباص عن أي أغنية محليًا جوه متصفحك — بدون رفع، بدون سيرفر.",
   },
   en: {
-    title: "Stem Studio",
+    title: "SakanWave",
     description: "Separate vocals, drums, and bass from any song locally in your browser — no upload, no server.",
   },
 };

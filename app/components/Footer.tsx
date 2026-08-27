@@ -1,6 +1,7 @@
 "use client";
 
-import { WaveformMark } from "@/app/components/Header";
+import Link from "next/link";
+import { Logo } from "@/app/components/Logo";
 import { useLocale } from "@/lib/i18n";
 
 export function Footer() {
@@ -9,7 +10,7 @@ export function Footer() {
   return (
     <footer id="privacy" className="px-4 py-14 scroll-mt-16" style={{ borderTop: "1px solid var(--card-border)" }}>
       <div className="mx-auto max-w-2xl flex flex-col items-center text-center gap-4">
-        <WaveformMark size={20} />
+        <Logo height={24} />
         <p className="font-display text-base font-medium">{t.footer.tagline}</p>
         <p className="text-xs leading-relaxed max-w-md" style={{ color: "var(--muted)" }}>
           {t.footer.privacyBody}
@@ -24,9 +25,9 @@ export function Footer() {
           <a href="#faq" className="hover:text-[var(--foreground)] transition-colors">
             {t.footer.nav.faq}
           </a>
-          <a href="#workspace" className="hover:text-[var(--foreground)] transition-colors">
+          <Link href="/workspace" className="hover:text-[var(--foreground)] transition-colors">
             {t.footer.nav.newSeparation}
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

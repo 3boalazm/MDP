@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 
-// Same path as WaveformMark in app/components/Header.tsx — the PWA icon
-// should be the literal brand mark, not a separate design.
+// A simplified single-path waveform glyph, colored to match the SakanWave
+// logo (white, from public/logo-sakanwave.svg) — square PWA icon sizes need
+// a compact mark, not the full wordmark lockup used in the header.
 const WAVEFORM_PATH =
   "M2 13c1.5 0 1.5-6 3-6s1.5 9 3 9 1.5-12 3-12 1.5 15 3 15 1.5-9 3-9 1.5 6 3 6";
 
@@ -29,7 +30,7 @@ export function buildIconResponse(size: number, { maskable = false }: { maskable
         <svg width={markSize} height={markSize} viewBox="0 0 24 24" fill="none">
           <path
             d={WAVEFORM_PATH}
-            stroke="#54d6c7"
+            stroke="#ffffff"
             strokeWidth={1.8}
             strokeLinecap="round"
             strokeLinejoin="round"

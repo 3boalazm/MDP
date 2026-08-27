@@ -2,6 +2,7 @@
 
 import { Waveform } from "@/app/components/Waveform";
 import { useLocale } from "@/lib/i18n";
+import { STEM_COLOR, STEM_GLOW } from "@/lib/stemColors";
 import { MAX_GAIN, type Source } from "@/lib/separation/constants";
 
 function formatTime(sec: number) {
@@ -43,31 +44,33 @@ export function StemResultCard({
 }) {
   const { t } = useLocale();
   const label = t.stems.label[source];
+  const color = STEM_COLOR[source];
+  const glow = STEM_GLOW[source];
 
   return (
     <div
       className="hover-lift animate-stagger-in flex flex-col gap-3 rounded-2xl p-4"
       style={{
         background: "var(--card-raised)",
-        border: `1px solid ${soloed ? "var(--accent-audio)" : "var(--card-border)"}`,
-        boxShadow: soloed ? "0 0 0 1px rgba(84,214,199,0.4), 0 8px 24px rgba(84,214,199,0.18)" : "none",
+        border: `1px solid ${soloed ? color : "var(--card-border)"}`,
+        boxShadow: soloed ? `0 0 0 1px ${glow}, 0 8px 24px ${glow}` : "none",
       }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <StemIcon source={source} />
+          <StemIcon source={source} color={color} />
           <span className="text-sm font-semibold">{label}</span>
         </div>
         <span
           className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide"
-          style={{ color: "var(--accent-audio)" }}
+          style={{ color }}
         >
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent-audio)" }} />
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${glow}` }} />
           {t.stems.ready}
         </span>
       </div>
 
-      <Waveform buffer={buffer} progress={muted ? 0 : progress} onSeek={onSeek} />
+      <Waveform buffer={buffer} progress={muted ? 0 : progress} onSeek={onSeek} playedColor={color} glowColor={glow} />
 
       <div className="ltr-metric flex items-center justify-between text-[11px] tabular-nums" style={{ color: "var(--muted)" }}>
         <span>{formatTime(progress * duration)}</span>
@@ -107,7 +110,7 @@ export function StemResultCard({
           step={0.01}
           value={gain}
           onChange={(e) => onGainChange(Number(e.target.value))}
-          className="flex-1 accent-[var(--accent)]"
+          className="min-w-0 flex-1 accent-[var(--accent)]"
           aria-label={`${label} volume`}
         />
         <span className="ltr-metric text-[10px] w-8 text-right tabular-nums" style={{ color: "var(--muted)" }}>
@@ -138,13 +141,21 @@ export function StemResultCard({
   );
 }
 
-export function StemIcon({ source }: { source: Source }) {
+export function StemIcon({
+  source,
+  color = "var(--muted)",
+  size = 16,
+}: {
+  source: Source;
+  color?: string;
+  size?: number;
+}) {
   const common = {
-    width: 16,
-    height: 16,
+    width: size,
+    height: size,
     viewBox: "0 0 24 24",
     fill: "none",
-    stroke: "var(--muted)",
+    stroke: color,
     strokeWidth: 1.6,
   };
   switch (source) {

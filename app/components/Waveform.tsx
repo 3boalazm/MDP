@@ -30,6 +30,7 @@ export function Waveform({
   onSeek,
   playedColor = "var(--accent-audio)",
   unplayedColor = "rgba(255,255,255,0.16)",
+  glowColor = "rgba(84,214,199,0.55)",
 }: {
   buffer: AudioBuffer | undefined;
   /** 0..1 playhead position */
@@ -37,6 +38,7 @@ export function Waveform({
   onSeek?: (fraction: number) => void;
   playedColor?: string;
   unplayedColor?: string;
+  glowColor?: string;
 }) {
   const peaks = useMemo(() => computePeaks(buffer, BAR_COUNT), [buffer]);
   const playedBars = Math.round(progress * BAR_COUNT);
@@ -66,7 +68,7 @@ export function Waveform({
             height: `${Math.round(p * 100)}%`,
             minHeight: 2,
             background: i < playedBars ? playedColor : unplayedColor,
-            boxShadow: i < playedBars ? "0 0 6px rgba(84,214,199,0.55)" : "none",
+            boxShadow: i < playedBars ? `0 0 6px ${glowColor}` : "none",
           }}
         />
       ))}

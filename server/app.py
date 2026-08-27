@@ -93,7 +93,7 @@ app = modal.App("demucs-fast-mode", image=image)
 
 @app.cls(
     gpu="L4",
-    min_containers=1,  # keeps one container warm — avoids ~10-30s cold starts, but bills GPU time continuously
+    min_containers=0,  # scales to zero when idle — no GPU billing between requests, at the cost of a cold start
     scaledown_window=300,
     timeout=600,
     secrets=[modal.Secret.from_name("demucs-shared-secret")],
