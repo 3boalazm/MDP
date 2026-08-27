@@ -8,9 +8,9 @@ export function Faq() {
   const items = SERVER_MODE_AVAILABLE ? [...t.faq.items, t.faq.serverItem] : t.faq.items;
 
   return (
-    <section id="faq" className="px-4 py-16 sm:py-20 scroll-mt-16">
+    <section className="px-4 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl">
-        <h2 className="font-display text-center text-2xl sm:text-3xl font-medium tracking-tight">{t.faq.title}</h2>
+        <h1 className="font-display text-center text-2xl sm:text-3xl font-medium tracking-tight">{t.faq.title}</h1>
         <div className="mt-8 flex flex-col gap-2">
           {items.map((item, i) => (
             <details

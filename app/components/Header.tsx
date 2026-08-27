@@ -15,13 +15,13 @@ export function Header() {
         </Link>
 
         <nav className="hidden sm:flex items-center gap-6 text-sm" style={{ color: "var(--muted)" }}>
-          <Link href="/#how-it-works" className="hover:text-[var(--foreground)] transition-colors">
+          <Link href="/how-it-works" className="hover:text-[var(--foreground)] transition-colors">
             {t.header.nav.howItWorks}
           </Link>
-          <Link href="/#faq" className="hover:text-[var(--foreground)] transition-colors">
+          <Link href="/faq" className="hover:text-[var(--foreground)] transition-colors">
             {t.header.nav.faq}
           </Link>
-          <Link href="/#privacy" className="hover:text-[var(--foreground)] transition-colors">
+          <Link href="/privacy" className="hover:text-[var(--foreground)] transition-colors">
             {t.header.nav.privacy}
           </Link>
         </nav>

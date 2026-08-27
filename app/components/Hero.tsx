@@ -41,13 +41,13 @@ export function Hero() {
           >
             {t.hero.primaryCta}
           </Link>
-          <a
-            href="#how-it-works"
+          <Link
+            href="/how-it-works"
             className="hover-lift press-scale rounded-full px-6 py-3 text-sm font-medium transition-colors"
             style={{ border: "1px solid var(--card-border)", color: "var(--foreground)" }}
           >
             {t.hero.secondaryCta}
-          </a>
+          </Link>
         </div>
 
         <div className="mt-4 flex justify-center">

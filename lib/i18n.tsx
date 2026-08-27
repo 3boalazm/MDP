@@ -129,9 +129,7 @@ const en = {
     newSeparation: "New separation",
     useOnDeviceInstead: "Use on-device instead",
     useFallbackInstead: "Use basic fallback instead (lower quality, not AI)",
-    quotaExceeded:
-      "Fast Mode has hit its free daily GPU limit — it resets in a few hours. Try again later, or use on-device instead.",
-    engineBadge: { hfServer: "AI Server Processing", onDevice: "Local Browser Processing" },
+    engineBadge: { server: "AI Server Processing", onDevice: "Local Browser Processing" },
     done: {
       aiBanner: "AI model loaded — vocals, drums, bass & other separated",
       serverBanner: "Fast Mode complete — vocals, drums, bass & other separated",
@@ -149,6 +147,31 @@ const en = {
       monoNote: "This file is mono, so there's no stereo separation to exploit — the output is unchanged from the original.",
       instrumentalLabel: "Instrumental",
       downloadLabel: (label: string) => `Download ${label}`,
+    },
+    tria: {
+      sectionTitle: "Generate AI Drums",
+      badge: "Experimental",
+      description:
+        "Generate a brand-new drum track based on this song's rhythm, using a separate AI model (TRIA). Research model — pretrained weights are non-commercial (CC BY-NC-SA 4.0), not the MIT-licensed engine used elsewhere in this app.",
+      generateButton: "Generate AI Drums",
+      stage: (stage: string): string => {
+        switch (stage) {
+          case "validating":
+            return "Validating…";
+          case "uploading":
+            return "Uploading…";
+          case "generating":
+            return "Generating drums — this can take a few minutes, longer on a cold start…";
+          default:
+            return "Working…";
+        }
+      },
+      cancel: "Cancel",
+      newGeneration: "Generate again",
+      done: {
+        banner: "Drums generated",
+        downloadLabel: "Download generated drums",
+      },
     },
   },
   stems: {
@@ -190,11 +213,23 @@ const en = {
   },
   footer: {
     tagline: "Your audio stays yours.",
-    privacyBody:
-      "On-device separation runs entirely in your browser via onnxruntime-web. Model files are cached locally after the first download and can be cleared anytime from your browser's site data settings — nothing about your audio is stored or sent to a server.",
+    nav: { howItWorks: "How it works", faq: "FAQ", privacy: "Privacy", newSeparation: "New separation" },
+  },
+  privacy: {
+    title: "Privacy",
+    subtitle: "What actually happens to your audio — no marketing language, just the mechanics.",
+    onDeviceTitle: "By default: nothing leaves your device",
+    onDeviceBody:
+      "On-device separation runs entirely in your browser via onnxruntime-web. Your audio file is decoded, processed, and played back locally — it is never uploaded, and no server ever sees it.",
+    cachingTitle: "Model caching",
+    cachingBody:
+      "The AI models (up to ~650MB total) are downloaded once and cached in your browser. You can clear them anytime from your browser's site data settings — clearing them just means the next separation re-downloads what it needs.",
+    engineTitle: "Engine",
     engineBody:
-      "Primary engine: four HT-Demucs FT specialist models (MIT licensed), run entirely on-device via onnxruntime-web — one per stem (vocals, drums, bass, other). Phase cancellation is used only as a fallback if the models can't run on this device.",
-    nav: { howItWorks: "How it works", faq: "FAQ", newSeparation: "New separation" },
+      "Four HT-Demucs FT specialist models (MIT licensed), one per stem (vocals, drums, bass, other), run entirely on-device via onnxruntime-web. Phase cancellation is used only as a fallback if the models can't run on this device — still fully local.",
+    fastModeTitle: "The exception: Fast Mode",
+    fastModeBody:
+      "Fast Mode is an optional, explicitly chosen alternative that trades privacy for speed: it uploads your audio to a GPU server for processing instead of running in your browser. It's never used unless you switch to it yourself in the workspace — on-device stays the default.",
   },
 };
 
@@ -324,9 +359,7 @@ const ar: Dict = {
     newSeparation: "فصل جديد",
     useOnDeviceInstead: "استخدم المعالجة على الجهاز بدل كده",
     useFallbackInstead: "استخدم الوضع البديل (جودة أقل، مش ذكاء اصطناعي)",
-    quotaExceeded:
-      "وضع السرعة وصل لحد استخدام الـ GPU المجاني اليومي — هيرجع يشتغل بعد كذا ساعة. جرب تاني بعدين، أو استخدم المعالجة على الجهاز.",
-    engineBadge: { hfServer: "معالجة على سيرفر ذكاء اصطناعي", onDevice: "معالجة محلية في المتصفح" },
+    engineBadge: { server: "معالجة على سيرفر ذكاء اصطناعي", onDevice: "معالجة محلية في المتصفح" },
     done: {
       aiBanner: "النموذج اشتغل بنجاح — الغناء والطبول والباص وباقي الآلات اتفصلوا",
       serverBanner: "وضع السرعة خلّص — الغناء والطبول والباص وباقي الآلات اتفصلوا",
@@ -344,6 +377,31 @@ const ar: Dict = {
       monoNote: "الملف ده مونو، يعني مفيش فرق ستيريو نقدر نستغله — الناتج زي الملف الأصلي بالظبط.",
       instrumentalLabel: "الموسيقى بدون غناء",
       downloadLabel: (label: string) => `نزّل ${label}`,
+    },
+    tria: {
+      sectionTitle: "توليد طبول بالذكاء الاصطناعي",
+      badge: "تجريبي",
+      description:
+        "ولّد مسار طبول جديد كليًا بناءً على إيقاع الأغنية دي، باستخدام نموذج ذكاء اصطناعي منفصل (TRIA). ده نموذج بحثي — أوزانه المدرَّبة غير تجارية (CC BY-NC-SA 4.0)، مش زي المحرك المرخّص MIT المستخدم في باقي التطبيق.",
+      generateButton: "ولّد طبول بالذكاء الاصطناعي",
+      stage: (stage: string): string => {
+        switch (stage) {
+          case "validating":
+            return "بيتأكد من الملف…";
+          case "uploading":
+            return "بيرفع الملف…";
+          case "generating":
+            return "بيولّد الطبول — ده ممكن ياخد كذا دقيقة، أكتر لو أول تشغيل…";
+          default:
+            return "شغال…";
+        }
+      },
+      cancel: "إلغاء",
+      newGeneration: "ولّد تاني",
+      done: {
+        banner: "اتولدت الطبول",
+        downloadLabel: "نزّل الطبول اللي اتولدت",
+      },
     },
   },
   stems: {
@@ -385,11 +443,23 @@ const ar: Dict = {
   },
   footer: {
     tagline: "صوتك بيفضل ملكك.",
-    privacyBody:
-      "الفصل على الجهاز بيشتغل بالكامل جوه متصفحك عن طريق onnxruntime-web. ملفات النماذج بتتخزن محليًا بعد أول تحميل، وتقدر تمسحها في أي وقت من إعدادات بيانات الموقع في متصفحك — مفيش أي حاجة عن صوتك بتتخزن أو بتتبعت لسيرفر.",
+    nav: { howItWorks: "طريقة الاستخدام", faq: "الأسئلة الشائعة", privacy: "الخصوصية", newSeparation: "فصل جديد" },
+  },
+  privacy: {
+    title: "الخصوصية",
+    subtitle: "إيه اللي بيحصل فعليًا لصوتك — من غير كلام تسويقي، بس الميكانيكية الحقيقية.",
+    onDeviceTitle: "افتراضيًا: مفيش حاجة بتسيب جهازك",
+    onDeviceBody:
+      "الفصل على الجهاز بيشتغل بالكامل جوه متصفحك عن طريق onnxruntime-web. ملف الصوت بتاعك بيتفك ترميزه ويتعالج ويتشغّل محليًا — مفيش رفع خالص، ومفيش أي سيرفر بيشوفه.",
+    cachingTitle: "تخزين النماذج المؤقت",
+    cachingBody:
+      "نماذج الذكاء الاصطناعي (لحد ~650MB إجمالي) بتتحمّل مرة واحدة وبتتخزن مؤقتًا في متصفحك. تقدر تمسحها في أي وقت من إعدادات بيانات الموقع في متصفحك — مسحها بس معناه إن أول فصل جاي هيعيد تحميل اللي محتاجه.",
+    engineTitle: "المحرك",
     engineBody:
-      "المحرك الأساسي: أربع نماذج HT-Demucs FT متخصصة (رخصة MIT)، بتشتغل بالكامل على الجهاز عن طريق onnxruntime-web — نموذج لكل مسار (الغناء، الطبول، الباص، أخرى). إلغاء الطور الصوتي بيتستخدم بس كوضع بديل لو النماذج ما قدرتش تشتغل على الجهاز.",
-    nav: { howItWorks: "طريقة الاستخدام", faq: "الأسئلة الشائعة", newSeparation: "فصل جديد" },
+      "أربع نماذج HT-Demucs FT متخصصة (رخصة MIT)، نموذج لكل مسار (الغناء، الطبول، الباص، أخرى)، بتشتغل بالكامل على الجهاز عن طريق onnxruntime-web. إلغاء الطور الصوتي بيتستخدم بس كوضع بديل لو النماذج ما قدرتش تشتغل على الجهاز — برضه محلي بالكامل.",
+    fastModeTitle: "الاستثناء: وضع السرعة",
+    fastModeBody:
+      "وضع السرعة (Fast Mode) بديل اختياري بتختاره بنفسك، بيضحي بالخصوصية عشان السرعة: بيرفع صوتك لسيرفر GPU للمعالجة بدل ما يشتغل جوه متصفحك. مش بيتستخدم أبدًا غير لو بدّلت له بنفسك في مساحة العمل — المعالجة على الجهاز تفضل هي الافتراضية.",
   },
 };
 

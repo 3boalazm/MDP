@@ -1,14 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
 import { Header } from "@/app/components/Header";
+import { Footer } from "@/app/components/Footer";
 import { LocaleProvider, type Locale } from "@/lib/i18n";
-import { LOCALE_COOKIE } from "@/lib/localeCookie";
+import { resolveLocale } from "@/lib/resolveLocale";
 import { thmanyahSerifDisplay, ibmPlexSans, ibmPlexSansArabic } from "@/lib/fonts";
 import "./globals.css";
 
-// Keyed by locale so metadata (crawlers, share previews, the tab title on
-// first paint) matches a returning visitor's saved preference immediately —
-// not just after client JS hydrates and corrects it.
 const META: Record<Locale, { title: string; description: string }> = {
   ar: {
     title: "SakanWave",
@@ -19,11 +16,6 @@ const META: Record<Locale, { title: string; description: string }> = {
     description: "Separate vocals, drums, and bass from any song locally in your browser — no upload, no server.",
   },
 };
-
-async function resolveLocale(): Promise<Locale> {
-  const store = await cookies();
-  return store.get(LOCALE_COOKIE)?.value === "en" ? "en" : "ar";
-}
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await resolveLocale();
@@ -50,7 +42,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <LocaleProvider initialLocale={locale}>
           <Header />
-          {children}
+          <main className="flex-1">{children}</main>
+          <Footer />
         </LocaleProvider>
       </body>
     </html>

@@ -12,7 +12,7 @@ export function StemsShowcase() {
 
   return (
     <section className="px-4 py-16 sm:py-20 text-center">
-      <h2 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">{t.stemsShowcase.title}</h2>
+      <h1 className="font-display text-2xl sm:text-3xl font-medium tracking-tight">{t.stemsShowcase.title}</h1>
       <p className="mt-3 max-w-xl mx-auto text-sm sm:text-base leading-relaxed" style={{ color: "var(--muted)" }}>
         {t.stemsShowcase.subtitle}
       </p>

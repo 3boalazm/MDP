@@ -6,9 +6,9 @@ export function Steps() {
   const { t } = useLocale();
 
   return (
-    <section id="how-it-works" className="px-4 py-16 sm:py-20 scroll-mt-16">
+    <section className="px-4 py-16 sm:py-20">
       <div className="mx-auto max-w-4xl">
-        <h2 className="font-display text-center text-2xl sm:text-3xl font-medium tracking-tight">{t.steps.title}</h2>
+        <h1 className="font-display text-center text-2xl sm:text-3xl font-medium tracking-tight">{t.steps.title}</h1>
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {t.steps.items.map((step) => (
             <div
